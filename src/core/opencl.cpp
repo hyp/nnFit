@@ -143,6 +143,15 @@ std::vector<Device> Device::findGPUs() {
     return devices;
 }
 
+double Device::profile(std::function<void (void)> f) {
+    CommandQueue q(*this, true);
+    auto prevQueue = defaultQueue;
+    defaultQueue = &q;
+    f();
+    defaultQueue = prevQueue;
+    return q.totalKernelProfilingTime();
+}
+
 CommandQueue::CommandQueue(Device &device, bool profile) : device(device), profile(profile) {
     cl_int error = 0;
     queue = clCreateCommandQueue(device.context(), device.id(), profile? CL_QUEUE_PROFILING_ENABLE : 0, &error);
@@ -164,6 +173,14 @@ void CommandQueue::dumpProfilingInfo() {
             std::cout<< "Kernel '" << record.first << "' was called " << info.invocations << " times " << info.totalTime << "ms " << " avg " << (info.totalTime/double(info.invocations)) << "ms\n";
         }
     }
+}
+
+double CommandQueue::totalKernelProfilingTime() const {
+    double total = 0;
+    for (auto &record : profileRecords) {
+        total += record.second.totalTime;
+    }
+    return total;
 }
 
 void CommandQueue::profileKernel(cl_event event, const Kernel &kernel) {

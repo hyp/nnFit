@@ -52,6 +52,7 @@ public:
     
     void init(uint32_t seed);
     void dump();
+    void tune();
     Vector &predict(NNContext &ctx, const Vector &input);
     Vector &feedforward(NNContext &ctx, const Vector &input);
     
@@ -66,6 +67,7 @@ private:
     Vector biasGradients;
     Vector activations;
     Vector derivatives;
+    Range2D weightInputMulWorkgroupSize;
     NeuronType neuronType;
 };
 

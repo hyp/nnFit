@@ -65,6 +65,8 @@ public:
     
     Program &getProgram(const char *name);
     
+    double profile(std::function<void (void)> f);
+    
     static std::vector<Device> findAll();
     static std::vector<Device> findGPUs();
 private:
@@ -97,6 +99,7 @@ public:
     void finish();
     void flush();
     void dumpProfilingInfo();
+    double totalKernelProfilingTime() const;
 private:
     void enqueueKernel(const Kernel &kernel, unsigned dimensions, const size_t *globalSize, const size_t *globalOffset, const size_t *workgroupSize = nullptr);
     void profileKernel(cl_event event, const Kernel &kernel);

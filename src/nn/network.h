@@ -11,7 +11,6 @@ public:
         Kernel sigmoidFeedforward;
         Kernel reluPredict;
         Kernel reluFeedforward;
-        Kernel feedforward;
         Kernel meanSquaredError;
         Kernel crossEntropyError;
         Kernel computeMSELayerError;
@@ -55,6 +54,7 @@ public:
     void init(uint32_t seed);
     void init();
     void dump();
+    void tune();
     const Vector &predict(const Vector &input);
     const Vector &feedforward(const Vector &input);
     void backpropagate();

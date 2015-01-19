@@ -283,7 +283,10 @@ void testMNIST(Device &device) {
     uint32_t seed = 12;
     std::cout << "Random initialization using seed '" << seed << "'\n";
     net.init(seed);
+    std::cout << "Tuning network perfomance: \n";
+    net.tune();
     
+    std::cout << "Training network..\n";
     GradientDescent opt(device, 0.3);
     CrossEntropyCriterion criterion;
     Trainer trainer(net, criterion, trainingSet);

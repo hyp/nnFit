@@ -33,17 +33,6 @@ kernel void reluFeedforward(global Scalar *x, global Scalar *derivative) {
     }
 }
 
-// Wx + b row reduction
-kernel void feedforward(global Scalar *weights, global Scalar *input, const uint inputSize, global Scalar *activation) {
-    size_t i = get_global_id(0);
-    size_t offset = i*inputSize;
-    Scalar sum = 0;
-    for (size_t j = 0; j < inputSize; j++, offset++) {
-        sum += weights[offset] * input[j];
-    }
-    activation[i] += sum;
-}
-
 kernel void meanSquaredError(global Scalar *prediction, global Scalar *y, global Scalar *output) {
     size_t i = get_global_id(0);
     Scalar diff = y[i] - prediction[i];

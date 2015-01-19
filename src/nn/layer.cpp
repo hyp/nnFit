@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <array>
 #include "layer.h"
 #include "network.h"
 
@@ -37,11 +38,40 @@ void Layer::dump() {
     }
 }
 
+void Layer::tune() {
+    // Tune weights by input multiplication
+    const std::array<size_t, 7> workgroupColumns = {1,2,4,8,16,32,64};
+    const std::array<size_t, 10> workgroupRows = {1,2,3,4,5,7,8,10,16,32};
+    auto &device = weights.device();
+    const size_t iterations = 100;
+    
+    Vector input(device, weights.columns());
+    input.size();
+    double bestTime = 0;
+    bool first = true;
+    for (auto rows: workgroupRows) {
+        if ((weights.rows() % rows) != 0)
+            continue;
+        for (auto columns: workgroupColumns) {
+            if ((weights.columns() % columns) != 0)
+                continue;
+            auto time = device.profile([&, this] () {
+                for (size_t i = 0; i < iterations; ++i)
+                    mul(activations, weights, input, Range2D(rows, columns));
+            });
+            if (first || time < bestTime) {
+                weightInputMulWorkgroupSize = Range2D(rows, columns);
+                first = false;
+                bestTime = time;
+            }
+        }
+    }
+    std::cout << "Best workgroup size for "<<weights.rows() << " by " << weights.columns() << " matrix vector multiplication: " << weightInputMulWorkgroupSize[0] << ", " << weightInputMulWorkgroupSize[1] << "\n";
+}
+
 void Layer::predictLinear(NNContext &ctx, const Vector &input) {
-    biases.copy(activations);
-    auto &feedforward = ctx.floatKernels.feedforward;
-    feedforward.setArg(0, weights).setArg(1, input).setArg(2, input.size()).setArg(3, activations);
-    input.device().queue().enqueue1Dim(feedforward, activations.size());
+    mul(activations, weights, input, weightInputMulWorkgroupSize);
+    add(activations, biases);
 }
 
 static Kernel &predictFunction(NNContext &ctx, Layer::NeuronType type) {

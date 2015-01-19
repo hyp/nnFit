@@ -8,7 +8,6 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
     sigmoidFeedforward = Kernel(program, "sigmoidFeedforward");
     reluPredict = Kernel(program, "reluPredict");
     reluFeedforward = Kernel(program, "reluFeedforward");
-    feedforward = Kernel(program, "feedforward");
     meanSquaredError = Kernel(program, "meanSquaredError");
     crossEntropyError = Kernel(program, "crossEntropyError");
     computeMSELayerError = Kernel(program, "computeMSELayerError");
@@ -52,6 +51,12 @@ void Network::init() {
 void Network::dump() {
     for (const auto &layer : layers) {
         layer->dump();
+    }
+}
+
+void Network::tune() {
+    for (const auto &layer : layers) {
+        layer->tune();
     }
 }
 
