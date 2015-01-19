@@ -143,9 +143,9 @@ std::vector<Device> Device::findGPUs() {
     return devices;
 }
 
-CommandQueue::CommandQueue(Device &device) : device(device) {
+CommandQueue::CommandQueue(Device &device, bool profile) : device(device), profile(profile) {
     cl_int error = 0;
-    queue = clCreateCommandQueue(device.context(), device.id(), 0, &error);
+    queue = clCreateCommandQueue(device.context(), device.id(), profile? CL_QUEUE_PROFILING_ENABLE : 0, &error);
     if (!queue || error != CL_SUCCESS) {
         device.error(error, "Failed to create command queue");
         queue = nullptr;
@@ -157,20 +157,47 @@ CommandQueue::~CommandQueue() {
         clReleaseCommandQueue(queue);
 }
 
+void CommandQueue::dumpProfilingInfo() {
+    if (profile) {
+        for (auto &record : profileRecords) {
+            auto info = record.second;
+            std::cout<< "Kernel '" << record.first << "' was called " << info.invocations << " times " << info.totalTime << "ms " << " avg " << (info.totalTime/double(info.invocations)) << "ms\n";
+        }
+    }
+}
+
+void CommandQueue::profileKernel(cl_event event, const Kernel &kernel) {
+    clWaitForEvents(1, &event);
+    cl_ulong start = 0, end = 0;
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, nullptr);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, nullptr);
+    auto time = (cl_double)(end - start)*(cl_double)(1e-06);
+    std::string key(kernel.kernelName());
+    auto i = profileRecords.insert(std::make_pair(key, ProfileInfo()));
+    i.first->second.invocations++;
+    i.first->second.totalTime += time;
+}
+
 void CommandQueue::enqueue1Dim(const Kernel &kernel, size_t size, size_t offset) {
     size_t sizes[] = { size, 0, 0 };
     size_t offsets[] = { offset, 0, 0 };
-    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 1, offsets, sizes, nullptr, 0, nullptr, nullptr);
+    cl_event event = nullptr;
+    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 1, offsets, sizes, nullptr, 0, nullptr, profile? &event : nullptr);
     if (error != CL_SUCCESS) {
         device.error(error, "Failed to enqueue a kernel");
+    } else if (profile) {
+        profileKernel(event, kernel);
     }
 }
 
 void CommandQueue::enqueue2Dim(const Kernel &kernel, size_t rows, size_t columns) {
     size_t sizes[] = { rows, columns, 0 };
-    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 2, nullptr, sizes, nullptr, 0, nullptr, nullptr);
+    cl_event event = nullptr;
+    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 2, nullptr, sizes, nullptr, 0, nullptr, profile? &event : nullptr);
     if (error != CL_SUCCESS) {
         device.error(error, "Failed to enqueue a kernel");
+    } else if (profile) {
+        profileKernel(event, kernel);
     }
 }
 
@@ -248,17 +275,18 @@ void Program::build() {
     }
 }
 
-Kernel::Kernel() : kernel(nullptr) { }
+Kernel::Kernel() : kernel(nullptr), name("") { }
 
 Kernel::Kernel(Program &program, const char *name) {
     cl_int error;
     kernel = clCreateKernel(program.id(), name, &error);
+    this->name = name;
     if (!kernel || error != CL_SUCCESS) {
         program.device().error(error, "Failed to create kernel");
     }
 }
 
-Kernel::Kernel(Kernel &&other) : kernel(std::move(other.kernel)) {
+Kernel::Kernel(Kernel &&other) : kernel(std::move(other.kernel)), name(other.name) {
     other.kernel = nullptr;
 }
 
@@ -269,6 +297,7 @@ Kernel::~Kernel() {
 
 Kernel &Kernel::operator =(Kernel &&other) {
     kernel = std::move(other.kernel);
+    name = other.name;
     other.kernel = nullptr;
     return *this;
 }

@@ -81,7 +81,7 @@ private:
 
 class CommandQueue {
 public:
-    CommandQueue(Device &device);
+    CommandQueue(Device &device, bool profile = false);
     ~CommandQueue();
     
     void enqueue1Dim(const Kernel &kernel, size_t size, size_t offset = 0);
@@ -94,10 +94,21 @@ public:
     
     void finish();
     void flush();
+    void dumpProfilingInfo();
 private:
+    void profileKernel(cl_event event, const Kernel &kernel);
     CommandQueue(const CommandQueue &) = delete;
+    
     Device &device;
     cl_command_queue queue;
+    bool profile;
+    struct ProfileInfo {
+        size_t invocations;
+        double totalTime;
+        
+        ProfileInfo() : invocations(0), totalTime(0) { }
+    };
+    std::unordered_map<std::string, ProfileInfo> profileRecords;
 };
 
 class Program {
@@ -128,6 +139,10 @@ public:
     Kernel(Kernel &&other);
     ~Kernel();
     
+    const char *kernelName() const {
+        return name;
+    }
+    
     inline cl_kernel id() const {
         return kernel;
     }
@@ -142,6 +157,7 @@ public:
 private:
     Kernel(const Kernel &) = delete;
     cl_kernel kernel;
+    const char *name;
 };
 
 class Storage {
