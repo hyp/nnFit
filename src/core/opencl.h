@@ -42,6 +42,10 @@ public:
     std::string vendor();
     std::string version();
     
+    size_t maxThreadsPerWorkgroup() const {
+        return maxThreadsInWorkgroup;
+    }
+    
     void init();
     
     void queue(CommandQueue &q) {
@@ -70,6 +74,7 @@ private:
     CommandQueue *defaultQueue;
     cl_context ctx;
     cl_device_type type;
+    size_t maxThreadsInWorkgroup;
     std::unique_ptr<TensorKernels> tensorKernel;
     std::unordered_map<std::string, std::unique_ptr<Program>> programs;
 };

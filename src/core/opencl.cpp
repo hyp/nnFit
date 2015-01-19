@@ -10,9 +10,10 @@ Device::Device(cl_device_id device) : device(device), ctx(nullptr) {
     if (error != CL_SUCCESS) {
         type = CL_DEVICE_TYPE_DEFAULT;
     }
+    maxThreadsInWorkgroup = 0;
 }
 
-Device::Device(Device &&other) : device(std::move(other.device)), ctx(std::move(other.ctx)) {
+Device::Device(Device &&other) : device(std::move(other.device)), ctx(std::move(other.ctx)), type(other.type), maxThreadsInWorkgroup(other.maxThreadsInWorkgroup) {
     other.device = nullptr;
     other.ctx = nullptr;
 }
@@ -26,6 +27,11 @@ void Device::init() {
     std::ifstream generic("generic.cl");
     std::ifstream fixed("fixed.cl");
     tensorKernel.reset(new TensorKernels(*this, generic, fixed));
+    
+    auto errorCode = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxThreadsInWorkgroup), &maxThreadsInWorkgroup, nullptr);
+    if (errorCode != CL_SUCCESS) {
+        error(errorCode, "Failed to get the max work group size");
+    }
 }
 
 cl_context Device::context() {
