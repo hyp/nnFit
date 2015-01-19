@@ -13,7 +13,7 @@ Device::Device(cl_device_id device) : device(device), ctx(nullptr) {
     maxThreadsInWorkgroup = 0;
 }
 
-Device::Device(Device &&other) : device(std::move(other.device)), ctx(std::move(other.ctx)), type(other.type), maxThreadsInWorkgroup(other.maxThreadsInWorkgroup) {
+Device::Device(Device &&other) : device(std::move(other.device)), ctx(std::move(other.ctx)), type(other.type), maxThreadsInWorkgroup(other.maxThreadsInWorkgroup), tensorKernel(std::move(other.tensorKernel)), programs(std::move(other.programs)) {
     other.device = nullptr;
     other.ctx = nullptr;
 }
