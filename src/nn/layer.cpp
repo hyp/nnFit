@@ -46,7 +46,7 @@ void Layer::tune() {
     const size_t iterations = 100;
     
     Vector input(device, weights.columns());
-    input.size();
+    input.ones();
     double bestTime = 0;
     bool first = true;
     for (auto rows: workgroupRows) {
