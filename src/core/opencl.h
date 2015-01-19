@@ -8,6 +8,7 @@
 #else
 #include "CL/cl.h"
 #endif
+#include "range.h"
 
 namespace nnFit {
 
@@ -85,7 +86,8 @@ public:
     ~CommandQueue();
     
     void enqueue1Dim(const Kernel &kernel, size_t size, size_t offset = 0);
-    void enqueue2Dim(const Kernel &kernel, size_t rows, size_t columns);
+    void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset = Range2D());
+    void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize);
     
     void fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize);
     void copy(const StorageRef &src, const StorageRef &dest, size_t size, size_t srcOffset = 0, size_t destOffset = 0);
@@ -96,6 +98,7 @@ public:
     void flush();
     void dumpProfilingInfo();
 private:
+    void enqueueKernel(const Kernel &kernel, unsigned dimensions, const size_t *globalSize, const size_t *globalOffset, const size_t *workgroupSize = nullptr);
     void profileKernel(cl_event event, const Kernel &kernel);
     CommandQueue(const CommandQueue &) = delete;
     

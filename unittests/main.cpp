@@ -13,10 +13,10 @@
 using namespace nnFit;
 
 template<typename T>
-void assertEquals(const std::vector<T> &x, std::initializer_list<T> y) {
-    assert(x.size() == y.size());
-    for (size_t i = 0; i < std::min(x.size(), y.size()); ++i) {
-        assert(x[i] == y.begin()[i]);
+void assertEquals(const std::vector<T> &x, const T *data, size_t size) {
+    assert(x.size() == size);
+    for (size_t i = 0; i < std::min(x.size(), size); ++i) {
+        assert(x[i] == data[i]);
     }
 }
 
@@ -25,7 +25,15 @@ void assertEquals(const Vector &x, std::initializer_list<T> y) {
     std::vector<T> dest;
     x.copy(dest);
     x.device().queue().finish();
-    assertEquals(dest, y);
+    assertEquals(dest, y.begin(), y.size());
+}
+
+template<typename T>
+void assertEquals(const Vector &x, std::vector<T> y) {
+    std::vector<T> dest;
+    x.copy(dest);
+    x.device().queue().finish();
+    assertEquals(dest, y.data(), y.size());
 }
 
 static Device selectDevice() {
@@ -83,6 +91,32 @@ void testSum(Device &device) {
     Vector z(device, {1.0f,2.0f,3.0f,4.0f,5.0f,6.0f,7.0f,8.0f,9.0f,10.0f,11.0f,12.0f});
     partialSum(x, z);
     assertEquals(x, {6.0f, 15.0f, 24.0f, 33.0f});
+}
+
+void testBLAS(Device &device) {
+    // Matrix identity
+    Matrix eye(device, 4, 4);
+    eye.identity();
+    assertEquals(eye, {1.0f,0.0f,0.0f,0.0f, 0.0f,1.0f,0.0f,0.0f, 0.0f,0.0f,1.0f,0.0f, 0.0f,0.0f,0.0f,1.0f});
+    
+    // Matrix by vector
+    {
+        Matrix m(device, 400, 400);
+        m.identity();
+        Vector v(device, 400);
+        v.fill(42.0f);
+        Vector result(device, 400);
+        mul(result, m, v);
+        assertEquals(result, std::vector<float>(result.size(), 42.0f));
+    }
+    {
+        Matrix m(device, 10, 400);
+        m.ones();
+        Vector v(device, 400);
+        v.fill(2.0f);
+        Vector result(device, 10);
+        mul(result, m, v);
+    }
 }
 
 void testBooleanOperations(Device &device) {
@@ -275,6 +309,7 @@ int main(int argc, const char * argv[]) {
 
     testVectors(device);
     testSum(device);
+    testBLAS(device);
     testBooleanOperations(device);
     testLayers(device);
     testLogicGates(device);

@@ -94,6 +94,7 @@
 		FA0D10041A6C291E00F395E5 /* mnistDataset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mnistDataset.cpp; sourceTree = "<group>"; };
 		FA0D10051A6C291E00F395E5 /* mnistDataset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mnistDataset.h; sourceTree = "<group>"; };
 		FA0D100E1A6C296A00F395E5 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
+		FA0D10111A6D227600F395E5 /* range.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = range.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +177,7 @@
 				FA0D0FE31A6C283600F395E5 /* valueType.h */,
 				FA0D0FE41A6C283600F395E5 /* vector.cpp */,
 				FA0D0FE51A6C283600F395E5 /* vector.h */,
+				FA0D10111A6D227600F395E5 /* range.h */,
 			);
 			name = core;
 			path = src/core;

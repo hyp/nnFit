@@ -12,6 +12,8 @@ TensorKernels::Specialization::Specialization(Device &device, std::ifstream &is)
     elementMul = Kernel(program, "elementMul");
     fill = Kernel(program, "fill");
     partialSum = Kernel(program, "partialSum");
+    matrixIdentity = Kernel(program, "matrixIdentity");
+    matrixVectorMul = Kernel(program, "matrixVectorMul");
 }
 
 TensorKernels::TensorKernels(Device &device, std::ifstream &genericSource, std::ifstream &fixedSource) : floatKernels(device, genericSource), program(device, fixedSource) {
@@ -127,6 +129,12 @@ VectorSlice Matrix::row(size_t i) const {
     return slice(i*columns(), (i+1)*columns());
 }
 
+void Matrix::identity() {
+    auto &kernel = device().tensorKernels().floatKernels.matrixIdentity;
+    kernel.setArg(0, *this).setArg(1, columns());
+    device().queue().enqueue2Dim(kernel, Range2D(sizes[0], sizes[1]));
+}
+
 void Matrix::resize(size_t rows, size_t columns) {
     Vector::resize(rows*columns);
     sizes[0] = rows;
@@ -161,6 +169,30 @@ static void exec(Kernel &kernel, Vector &x, float y) {
     assert(x.type() == ValueType::Float);
     kernel.setArg(0, x).setArg(1, y).setArg(2, x);
     x.device().queue().enqueue1Dim(kernel, x.size());
+}
+
+// Selects a decent work group size for a row
+static size_t selectRowPartion(size_t size) {
+    if (size > 8) {
+        // Check for divisibility from 32 to 2
+        for (size_t i = 5; i > 0; --i) {
+            auto x = 1<<i;
+            if ((size & (x - 1)) == 0)
+                return x;
+        }
+    }
+    return 1;
+}
+
+static const size_t commonColumnPartions[] = { 32, 16, 10, 8, 7, 5, 4, 3 };
+static const size_t commonColumnPartionsCount = sizeof(commonColumnPartions) / sizeof(commonColumnPartions[0]);
+
+static size_t selectColumnPartion(size_t size) {
+    for (size_t i = 0; i < commonColumnPartionsCount; ++i) {
+        if ((size % commonColumnPartions[i]) == 0)
+            return commonColumnPartions[i];
+    }
+    return 1;
 }
 
 namespace nnFit {
@@ -240,6 +272,29 @@ void partialTrueCount(Vector &dest, const Vector &x) {
     auto &kernel = x.device().tensorKernels().partialTrueCount;
     kernel.setArg(0, x).setArg(1, x.size()).setArg(2, partSize).setArg(3, dest);
     x.device().queue().enqueue1Dim(kernel, partCount);
+}
+    
+void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+    // Compute workgroup
+    size_t rowsPerWorkgroup = workgroupSizes[0];
+    size_t parts = workgroupSizes[1];
+    if (parts == 0) {
+        parts = selectRowPartion(x.columns());
+        rowsPerWorkgroup = selectColumnPartion(x.rows());
+    }
+    
+    assert(x.type() == y.type());
+    assert(x.type() == dest.type());
+    assert(x.columns() == y.size());
+    assert(x.rows() == dest.size());
+    
+    size_t partSize = x.columns()/parts;
+    
+    // Shedule
+    auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul;
+    kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()).setArg(3, partSize).setArg(4, dest);
+    kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
+    x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
 }
     
 } // namespace nnFit

@@ -46,3 +46,43 @@ kernel void partialSum(global Scalar *x, const uint size, const uint partSize, g
     dest[part] = sum;
 }
 
+kernel void matrixIdentity(global Scalar *matrix, const uint columns) {
+    size_t i = get_global_id(0);
+    size_t j = get_global_id(1);
+    matrix[i * columns + j] = i == j? 1.0 : 0.0;
+}
+
+kernel void matrixVectorMul(global Scalar *matrix, global Scalar *vector, const uint columns, const uint partSize, global Scalar *output, local Scalar *work) {
+    // Compute partial dot product
+    size_t i = get_global_id(0);
+    size_t j = get_global_id(1);
+    size_t parts = get_global_size(1);
+    size_t k = j*partSize;
+    
+    size_t offset = i*columns + k;
+    Scalar partialSum = 0;
+    for (size_t end = k + partSize; k < end; k++, offset++) {
+        partialSum += matrix[offset] * vector[k];
+    }
+    
+    // Store the partial result in local work memory
+    size_t ii = get_local_id(0);
+    size_t jj = get_local_id(1);
+    size_t workColumns = get_local_size(1);
+    size_t workRowOffset = ii * workColumns;
+    work[workRowOffset + jj] = partialSum;
+    
+    // Wait until all the threads in this group have computed their partial sums
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    // The first thread in a given row sums all the partial sums produced by itself
+    // and the other threads in this row.
+    if (jj == 0) {
+        Scalar sum = 0;
+        for (size_t k = workRowOffset, end = workRowOffset + workColumns; k < end; ++k) {
+            sum += work[k];
+        }
+        output[i] = sum;
+    }
+}
+

@@ -178,11 +178,9 @@ void CommandQueue::profileKernel(cl_event event, const Kernel &kernel) {
     i.first->second.totalTime += time;
 }
 
-void CommandQueue::enqueue1Dim(const Kernel &kernel, size_t size, size_t offset) {
-    size_t sizes[] = { size, 0, 0 };
-    size_t offsets[] = { offset, 0, 0 };
+void CommandQueue::enqueueKernel(const Kernel &kernel, unsigned dimensions, const size_t *globalSize, const size_t *globalOffset, const size_t *workgroupSize) {
     cl_event event = nullptr;
-    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 1, offsets, sizes, nullptr, 0, nullptr, profile? &event : nullptr);
+    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), dimensions, globalOffset, globalSize, workgroupSize, 0, nullptr, profile? &event : nullptr);
     if (error != CL_SUCCESS) {
         device.error(error, "Failed to enqueue a kernel");
     } else if (profile) {
@@ -190,15 +188,23 @@ void CommandQueue::enqueue1Dim(const Kernel &kernel, size_t size, size_t offset)
     }
 }
 
-void CommandQueue::enqueue2Dim(const Kernel &kernel, size_t rows, size_t columns) {
-    size_t sizes[] = { rows, columns, 0 };
-    cl_event event = nullptr;
-    auto error = clEnqueueNDRangeKernel(queue, kernel.id(), 2, nullptr, sizes, nullptr, 0, nullptr, profile? &event : nullptr);
-    if (error != CL_SUCCESS) {
-        device.error(error, "Failed to enqueue a kernel");
-    } else if (profile) {
-        profileKernel(event, kernel);
-    }
+void CommandQueue::enqueue1Dim(const Kernel &kernel, size_t size, size_t offset) {
+    size_t sizes[] = { size, 0, 0 };
+    size_t offsets[] = { offset, 0, 0 };
+    enqueueKernel(kernel, 1, sizes, offsets);
+}
+
+void CommandQueue::enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset) {
+    size_t sizes[] = { size[0], size[1], 0 };
+    size_t offsets[] = { offset[0], offset[1], 0 };
+    enqueueKernel(kernel, 2, sizes, offsets);
+}
+
+void CommandQueue::enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize) {
+    size_t sizes[] = { size[0], size[1], 0 };
+    size_t offsets[] = { offset[0], offset[1], 0 };
+    size_t localSizes[] = { workgroupSize[0], workgroupSize[1], 0 };
+    enqueueKernel(kernel, 2, sizes, offsets, localSizes);
 }
 
 void CommandQueue::fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize) {

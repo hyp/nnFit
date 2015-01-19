@@ -117,6 +117,6 @@ void Layer::computeGradients(NNContext &ctx, const Vector &input) {
     auto &queue = weights.device().queue();
     auto &k = ctx.floatKernels.computeWeightGradients;
     k.setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients);
-    queue.enqueue2Dim(k, weightGradients.rows(), weightGradients.columns());
+    queue.enqueue2Dim(k, Range2D(weightGradients.rows(), weightGradients.columns()));
     add(biasGradients, errorTerm());
 }

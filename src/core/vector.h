@@ -20,6 +20,8 @@ public:
         Kernel elementMul;
         Kernel fill;
         Kernel partialSum;
+        Kernel matrixIdentity;
+        Kernel matrixVectorMul;
         
         Specialization(Device &device, std::ifstream &is);
     };
@@ -133,6 +135,8 @@ public:
     }
     
     VectorSlice row(size_t i) const;
+    
+    void identity();
 
     void resize(size_t rows, size_t columns);
 private:
@@ -167,5 +171,9 @@ void partialSum(Vector &dest, const Vector &x);
 // Counts the number of true values in x
 // x must be a uint8 vector, while dest must be a uint32 vector
 void partialTrueCount(Vector &dest, const Vector &x);
+
+// Matrix by vector multiplication
+// dest = x * y
+void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
 } // namespace nnFit
