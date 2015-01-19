@@ -18,9 +18,10 @@ struct RangeND {
             sizes[i] = init.begin()[i];
     }
     
-    RangeND<N> operator = (const RangeND<N> &other) {
+    RangeND<N> &operator = (const RangeND<N> &other) {
         for (size_t i = 0; i < N; ++i)
             sizes[i] = other.sizes[i];
+        return *this;
     }
     
     inline size_t *data() {
