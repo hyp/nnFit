@@ -11,8 +11,9 @@ class ErrorCriterion;
 
 class Trainer {
 public:
-    std::function<void (size_t, size_t, float)> afterIteration;
+    std::function<void (size_t, float)> afterIteration;
     bool reshuffleIndices;
+    bool profile;
     
     Trainer(Network &network, ErrorCriterion &criterion, Dataset &data);
     

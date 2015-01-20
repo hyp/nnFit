@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "trainer.h"
 #include "errorCriterion.h"
 #include "optimizers/optimizer.h"
@@ -7,6 +8,7 @@ using namespace nnFit;
 
 Trainer::Trainer(Network &network, ErrorCriterion &criterion, Dataset &data) : network(network), criterion(criterion), data(data), trainingExampleCount(data.size()), input(network.device(), data.inputSize()), output(network.device(), data.outputSize()) {
     reshuffleIndices = false;
+    profile = false;
 }
 
 void Trainer::gradientDescent(Optimizer &opt, size_t iterations) {
@@ -26,7 +28,11 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
     for (size_t i = 0; i < indices.size(); ++i)
         indices[i] = i;
     
+    std::chrono::high_resolution_clock::time_point iterationStart;
     for (size_t iteration = 0; iteration < iterations; ++iteration) {
+        float iterationError = 0.0f;
+        if (profile)
+            iterationStart = std::chrono::high_resolution_clock::now();
         // Shuffle indices if needed
         if (reshuffleIndices)
             std::random_shuffle(indices.begin(), indices.end());
@@ -61,13 +67,20 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
 
             std::vector<float> errs;
             errorSum.copy(errs);
-            float err = errs[0]/float(count);
+            float err = errs[0];
+            iterationError += err;
+            err/=float(count);
             
             opt.optimize(weightsAndGradients);
-            
-            if (afterIteration) {
-                afterIteration(iteration, batch, err);
-            }
+        }
+        if (profile) {
+            network.device().queue().finish();
+            auto now = std::chrono::high_resolution_clock::now();
+            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(now - iterationStart).count();
+            std::cout << "One training iteration ran for " << seconds << "s\n";
+        }
+        if (afterIteration) {
+            afterIteration(iteration, iterationError/trainingExampleCount);
         }
     }
 }

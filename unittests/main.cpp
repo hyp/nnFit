@@ -229,7 +229,7 @@ void testTrainer(Device &device) {
         MSECriterion criterion;
         Trainer trainer(net, criterion, data);
         float previousError = 0.0f;
-        trainer.afterIteration = [&] (size_t i, size_t batch, float error) {
+        trainer.afterIteration = [&] (size_t i, float error) {
             if (i != 0) {
                 // Make sure the error is going down
                 assert(previousError >= error);
@@ -292,13 +292,12 @@ void testMNIST(Device &device) {
     Trainer trainer(net, criterion, trainingSet);
     ClassificationEvaluator evaluator(testSet);
     trainer.reshuffleIndices = true;
+    trainer.profile = true;
     // Train & evaluate
-    trainer.afterIteration = [&] (size_t i, size_t batch, float cost) {
-        if (batch == 0 && i != 0) {
-            std::cout << "Evaluating perfomance after " << i << " iteration(s):\n";
-            auto result = evaluator.evaluate(net);
-            std::cout << "Cost (of last batch) " << cost << ", test set accuracy: " << result.correctPredictions << "/" << result.count << ", " << result.percentageOfCorrectPredictions() << "%\n";
-        }
+    trainer.afterIteration = [&] (size_t i, float cost) {
+        std::cout << "Evaluating perfomance after " << (i+1) << " iteration(s):\n";
+        auto result = evaluator.evaluate(net);
+        std::cout << "Cost (of last batch) " << cost << ", test set accuracy: " << result.correctPredictions << "/" << result.count << ", " << result.percentageOfCorrectPredictions() << "%\n";
     };
     trainer.miniBatchGradientDescent(opt, 30, 50);
 }
