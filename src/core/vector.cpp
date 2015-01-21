@@ -124,9 +124,10 @@ Matrix::Matrix(Matrix &&other) : Vector(std::move(other)) {
     sizes[1] = other.sizes[1];
 }
 
-VectorSlice Matrix::row(size_t i) const {
+VectorSlice Matrix::row(size_t i, size_t count) const {
     assert(i < rows());
-    return slice(i*columns(), (i+1)*columns());
+    assert((i + count) <= rows());
+    return slice(i*columns(), (i+count)*columns());
 }
 
 void Matrix::identity() {

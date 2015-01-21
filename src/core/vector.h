@@ -134,7 +134,8 @@ public:
         return sizes[1];
     }
     
-    VectorSlice row(size_t i) const;
+    // Return a slice containing row(s) of a matrix.
+    VectorSlice row(size_t i, size_t count = 1) const;
     
     void identity();
 
