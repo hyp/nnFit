@@ -17,7 +17,7 @@ size_t SimpleDataset::outputSize() const {
     return outputs.columns();
 }
 
-void SimpleDataset::get(size_t i, Vector &input, Vector &output) {
-    inputs.row(i).copy(input);
-    outputs.row(i).copy(output);
+void SimpleDataset::get(size_t i, size_t count, Vector &input, Vector &output) {
+    inputs.row(i, count).copy(input);
+    outputs.row(i, count).copy(output);
 }

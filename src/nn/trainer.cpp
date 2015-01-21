@@ -48,7 +48,7 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             
             // Train
             for (size_t i = batch*miniBatchSize, end = i + count; i < end; ++i) {
-                data.get(indices[i], input, output);
+                data.get(indices[i], 1, input, output);
                 
                 const auto &prediction = network.feedforward(input);
                 criterion.computeError(network.context(), prediction, output, errors);

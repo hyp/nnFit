@@ -16,9 +16,9 @@ size_t MNIST::outputSize() const {
     return 10;
 }
 
-void MNIST::get(size_t i, Vector &input, Vector &output) {
-    images_.row(i).copy(input);
-    labelProbabilities_.row(i).copy(output);
+void MNIST::get(size_t i, size_t count, Vector &input, Vector &output) {
+    images_.row(i, count).copy(input);
+    labelProbabilities_.row(i, count).copy(output);
 }
 
 const Vector *MNIST::classificationLabels() {

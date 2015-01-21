@@ -19,7 +19,7 @@ ClassificationEvaluator::Result ClassificationEvaluator::evaluate(Network &net) 
     auto &kernel = net.context().floatKernels.evaluateClassification;
     
     for (size_t i = 0; i < size; ++i) {
-        data.get(i, input, output);
+        data.get(i, 1, input, output);
         const auto &hypothesis = net.predict(input);
         kernel.setArg(0, hypothesis).setArg(1, i).setArg(2, classCount).setArg(3, labels).setArg(4, classificationResult);
         device.queue().enqueue1Dim(kernel, 1);

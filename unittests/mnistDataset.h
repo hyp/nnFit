@@ -25,7 +25,7 @@ public:
     size_t inputSize() const override;
     size_t outputSize() const override;
     
-    void get(size_t i, Vector &input, Vector &output) override;
+    void get(size_t i, size_t count, Vector &input, Vector &output) override;
     
     const Vector *classificationLabels() override;
     
