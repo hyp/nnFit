@@ -224,6 +224,12 @@ void CommandQueue::enqueue2Dim(const Kernel &kernel, const Range2D &size, const 
     enqueueKernel(kernel, 2, sizes, offsets, localSizes);
 }
 
+void CommandQueue::enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset) {
+    size_t sizes[] = { size[0], size[1], size[2] };
+    size_t offsets[] = { offset[0], offset[1], offset[2] };
+    enqueueKernel(kernel, 3, sizes, offsets);
+}
+
 void CommandQueue::fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize) {
     auto error = clEnqueueFillBuffer(queue, dest.id(), pattern, patternSize, offset, size, 0, nullptr, nullptr);
     if (error != CL_SUCCESS) {
