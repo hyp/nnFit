@@ -48,4 +48,13 @@ struct Range2D : RangeND<2> {
     }
 };
     
+struct Range3D : RangeND<3> {
+    Range3D() { }
+    Range3D(size_t x, size_t y, size_t z) {
+        sizes[0] = x;
+        sizes[1] = y;
+        sizes[2] = z;
+    }
+};
+    
 } // namespace nnFit
