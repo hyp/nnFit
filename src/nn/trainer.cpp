@@ -63,7 +63,7 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             errorSum.copy(errs);
             float err = errs[0]/float(count);
             
-            opt.optimize(err, weightsAndGradients);
+            opt.optimize(weightsAndGradients);
             
             if (afterIteration) {
                 afterIteration(iteration, batch, err);

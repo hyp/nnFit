@@ -7,7 +7,7 @@ GradientDescent::GradientDescent(Device &device, float learningRate)
     kernel = Kernel(device.getProgram("gradientDescent.cl"), "gradientDescent");
 }
 
-void GradientDescent::optimize(float error, const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) {
+void GradientDescent::optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) {
     auto &queue = device.queue();
     for (auto &i : weightsAndGradients) {
         auto &weights = *i.first;

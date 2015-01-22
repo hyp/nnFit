@@ -6,7 +6,7 @@ namespace nnFit {
 
 class Optimizer {
 public:
-    virtual void optimize(float error, const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) = 0;
+    virtual void optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) = 0;
 };
     
 } // namespace nnFit
