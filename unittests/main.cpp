@@ -117,6 +117,16 @@ void testBLAS(Device &device) {
         Vector result(device, 10);
         mul(result, m, v);
     }
+    {
+        // Force the use of a 'float' version instead of 'float4'
+        Matrix m(device, 5, 3);
+        m.ones();
+        Vector v(device, 3);
+        v.fill(2.0f);
+        Vector result(device, 5);
+        mul(result, m, v);
+        assertEquals(result, { 6.0f, 6.0f, 6.0f, 6.0f, 6.0f });
+    }
 }
 
 void testBooleanOperations(Device &device) {
