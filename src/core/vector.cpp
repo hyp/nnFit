@@ -14,6 +14,7 @@ TensorKernels::Specialization::Specialization(Device &device, std::ifstream &is)
     partialSum = Kernel(program, "partialSum");
     matrixIdentity = Kernel(program, "matrixIdentity");
     matrixVectorMul = Kernel(program, "matrixVectorMul");
+    matrixVectorMul4 = Kernel(program, "matrixVectorMul4");
 }
 
 TensorKernels::TensorKernels(Device &device, std::ifstream &genericSource, std::ifstream &fixedSource) : floatKernels(device, genericSource), program(device, fixedSource) {
@@ -290,6 +291,14 @@ void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgrou
     assert(x.rows() == dest.size());
     
     size_t partSize = x.columns()/parts;
+    if (partSize % 4 == 0) {
+        assert(x.columns() % 4 == 0);
+        auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul4;
+        kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()/4).setArg(3, partSize/4).setArg(4, dest);
+        kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
+        x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
+        return;
+    }
     
     // Shedule
     auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul;

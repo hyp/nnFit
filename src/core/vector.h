@@ -22,6 +22,7 @@ public:
         Kernel partialSum;
         Kernel matrixIdentity;
         Kernel matrixVectorMul;
+        Kernel matrixVectorMul4;
         
         Specialization(Device &device, std::ifstream &is);
     };
