@@ -184,7 +184,10 @@ double CommandQueue::totalKernelProfilingTime() const {
 }
 
 void CommandQueue::profileKernel(cl_event event, const Kernel &kernel) {
-    clWaitForEvents(1, &event);
+    auto error = clWaitForEvents(1, &event);
+    if (error != CL_SUCCESS) {
+        device.error(error, "Failed to wait for an event");
+    }
     cl_ulong start = 0, end = 0;
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &start, nullptr);
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end, nullptr);
