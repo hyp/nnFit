@@ -7,13 +7,13 @@ GradientDescent::GradientDescent(Device &device, float learningRate)
     kernel = Kernel(device.getProgram("gradientDescent.cl"), "gradientDescent");
 }
 
-void GradientDescent::optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) {
+void GradientDescent::optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients, size_t trainingExamples) {
     auto &queue = device.queue();
     for (auto &i : weightsAndGradients) {
         auto &weights = *i.first;
         auto &gradients = *i.second;
         
-        kernel.setArg(0, weights).setArg(1, gradients).setArg(2, learningRate);
+        kernel.setArg(0, weights).setArg(1, gradients).setArg(2, learningRate/float(trainingExamples));
         queue.enqueue1Dim(kernel, weights.size());
     }
 }

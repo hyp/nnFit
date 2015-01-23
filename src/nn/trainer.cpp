@@ -56,11 +56,6 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
                 network.backpropagate();
             }
             
-            // gradients = gradients / numberOfTrainingExamples
-            for (auto &i : weightsAndGradients) {
-                div(*i.second, float(count));
-            }
-            
             // Sum the error
             Vector errorSum(network.device(), 1);
             partialSum(errorSum, errors);
@@ -71,7 +66,9 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             iterationError += err;
             err/=float(count);
             
-            opt.optimize(weightsAndGradients);
+            // gradients = gradients / numberOfTrainingExamples
+            // Scale the gradients while optimizing to avoid redundant division step.
+            opt.optimize(weightsAndGradients, count);
         }
         if (profile) {
             network.device().queue().finish();

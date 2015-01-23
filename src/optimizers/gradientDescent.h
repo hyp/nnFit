@@ -8,7 +8,7 @@ class GradientDescent: public Optimizer {
 public:
     GradientDescent(Device &device, float learningRate);
     
-    void optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients) override;
+    void optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients, size_t trainingExamples) override;
     
 private:
     Device &device;
