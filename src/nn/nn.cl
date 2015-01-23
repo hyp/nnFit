@@ -41,7 +41,8 @@ kernel void meanSquaredError(global Scalar *prediction, global Scalar *y, global
 
 kernel void crossEntropyError(global Scalar *prediction, global Scalar *y, global Scalar *output) {
     size_t i = get_global_id(0);
-    output[i] += -(y[i]*log(prediction[i]) + ((Scalar)1.0 - y[i])*log((Scalar)1.0 - prediction[i]));
+    Scalar err = -(y[i]*log(prediction[i]) + ((Scalar)1.0 - y[i])*log((Scalar)1.0 - prediction[i]));
+    output[i] += isnan(err)? (Scalar)0.0 : err;
 }
 
 // The "responsibility" of the last layer with MSE criterion.
