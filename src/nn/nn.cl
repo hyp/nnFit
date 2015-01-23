@@ -1,6 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 
 typedef float Scalar;
+typedef float4 Scalar4;
 
 Scalar sigmoid(Scalar x) {
     return (Scalar)1.0/((Scalar)1.0 + exp(-x));
@@ -78,6 +79,12 @@ kernel void computeWeightGradient(global Scalar *errorTerm, global Scalar *input
     weightGradients[row*columns + column] += errorTerm[row] * input[column];
 }
 
+kernel void computeWeightGradient4(global Scalar *errorTerm, global Scalar4 *input, global Scalar4 *weightGradients) {
+    size_t row = get_global_id(0);
+    size_t column = get_global_id(1);
+    size_t columns = get_global_size(1);
+    weightGradients[row*columns + column] += errorTerm[row] * input[column];
+}
 
 kernel void evaluateClassification(global Scalar *output, const uint n, const uint size, global ushort *labels, global uchar *dest) {
     size_t part = n;//Later: get_global_id(0);

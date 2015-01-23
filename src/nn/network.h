@@ -17,6 +17,7 @@ public:
         Kernel computeCrossEntropyLayerError;
         Kernel computeError;
         Kernel computeWeightGradients;
+        Kernel computeWeightGradients4;
         Kernel evaluateClassification;
         
         Specialization(Device &device, Program &program);

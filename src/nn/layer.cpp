@@ -144,9 +144,10 @@ void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {
 void Layer::computeGradients(NNContext &ctx, const Vector &input) {
     // weightGradient += error * input'
     // biasGradient += error
+    bool use4wide = weightGradients.columns() % 4 == 0;
     auto &queue = weights.device().queue();
-    auto &k = ctx.floatKernels.computeWeightGradients;
+    auto &k = use4wide? ctx.floatKernels.computeWeightGradients4 : ctx.floatKernels.computeWeightGradients;
     k.setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients);
-    queue.enqueue2Dim(k, Range2D(weightGradients.rows(), weightGradients.columns()));
+    queue.enqueue2Dim(k, Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
     add(biasGradients, errorTerm());
 }

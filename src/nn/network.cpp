@@ -14,6 +14,7 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
     computeCrossEntropyLayerError = Kernel(program, "computeCrossEntropyLayerError");
     computeError = Kernel(program, "computeError");
     computeWeightGradients = Kernel(program, "computeWeightGradient");
+    computeWeightGradients4 = Kernel(program, "computeWeightGradient4");
     evaluateClassification = Kernel(program, "evaluateClassification");
 }
 
