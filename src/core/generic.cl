@@ -60,10 +60,10 @@ kernel void matrixVectorMul(global Scalar *matrix, global Scalar *vector, const 
     size_t parts = get_global_size(1);
     size_t k = j*partSize;
     
-    size_t offset = i*columns + k;
     Scalar partialSum = 0;
-    for (size_t end = k + partSize; k < end; k++, offset++) {
-        partialSum += matrix[offset] * vector[k];
+    const global Scalar *row = matrix + i*columns;
+    for (size_t end = k + partSize; k < end; k++) {
+        partialSum += row[k] * vector[k];
     }
     
     // Store the partial result in local work memory
@@ -93,11 +93,11 @@ kernel void matrixVectorMul4(global Scalar4 *matrix, global Scalar4 *vector, con
     size_t j = get_global_id(1);
     size_t parts = get_global_size(1);
     size_t k = j*partSize;
-    
-    size_t offset = i*columns + k;
+
     Scalar partialSum = 0;
-    for (size_t end = k + partSize; k < end; k++, offset++) {
-        partialSum += dot(matrix[offset], vector[k]);
+    const global Scalar4 *row = matrix + i*columns;
+    for (size_t end = k + partSize; k < end; k++) {
+        partialSum += dot(row[k], vector[k]);
     }
     
     // Store the partial result in local work memory
