@@ -21,6 +21,9 @@ void Trainer::miniBatchGradientDescent(Optimizer &opt, size_t iterations, size_t
 
 void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
     Vector errors(network.device(), data.outputSize());
+    Vector errorSum(network.device(), 1);
+    std::vector<float> errs;
+    
     auto weightsAndGradients = network.weightsAndGradients();
     size_t batchCount = trainingExampleCount/miniBatchSize + (trainingExampleCount % miniBatchSize == 0? 0 : 1);
     
@@ -30,7 +33,8 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
     
     std::chrono::high_resolution_clock::time_point iterationStart;
     for (size_t iteration = 0; iteration < iterations; ++iteration) {
-        float iterationError = 0.0f;
+        // Reset errors
+        errors.zeros();
         if (profile)
             iterationStart = std::chrono::high_resolution_clock::now();
         // Shuffle indices if needed
@@ -40,11 +44,10 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
         for (size_t batch = 0; batch < batchCount; ++batch) {
             size_t count = std::min(batch*miniBatchSize+miniBatchSize, trainingExampleCount) - batch*miniBatchSize;
             
-            // Reset gradients and errors
+            // Reset gradients
             for (auto &i : weightsAndGradients) {
                 i.second->zeros();
             }
-            errors.zeros();
             
             // Train
             for (size_t i = batch*miniBatchSize, end = i + count; i < end; ++i) {
@@ -56,20 +59,16 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
                 network.backpropagate();
             }
             
-            // Sum the error
-            Vector errorSum(network.device(), 1);
-            partialSum(errorSum, errors);
-
-            std::vector<float> errs;
-            errorSum.copy(errs);
-            float err = errs[0];
-            iterationError += err;
-            err/=float(count);
-            
             // gradients = gradients / numberOfTrainingExamples
             // Scale the gradients while optimizing to avoid redundant division step.
             opt.optimize(weightsAndGradients, count);
         }
+        
+        // Compute the iteration error.
+        partialSum(errorSum, errors);
+        errorSum.copy(errs);
+        float iterationError = errs[0] / float(trainingExampleCount);
+        
         if (profile) {
             network.device().queue().finish();
             auto now = std::chrono::high_resolution_clock::now();
@@ -77,7 +76,7 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             std::cout << "One training iteration ran for " << seconds << "s\n";
         }
         if (afterIteration) {
-            afterIteration(iteration, iterationError/trainingExampleCount);
+            afterIteration(iteration, iterationError);
         }
     }
 }
