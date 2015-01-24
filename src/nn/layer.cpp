@@ -45,6 +45,7 @@ void Layer::tune() {
     auto &device = weights.device();
     const size_t iterations = 100;
     
+    Vector output(device, weights.rows());
     Vector input(device, weights.columns());
     input.ones();
     double bestTime = 0;
@@ -57,7 +58,7 @@ void Layer::tune() {
                 continue;
             auto time = device.profile([&, this] () {
                 for (size_t i = 0; i < iterations; ++i)
-                    mul(activations, weights, input, Range2D(rows, columns));
+                    parallelMul(output, weights, input, Range2D(rows, columns));
             });
             if (first || time < bestTime) {
                 weightInputMulWorkgroupSize = Range2D(rows, columns);
@@ -70,8 +71,8 @@ void Layer::tune() {
 }
 
 void Layer::predictLinear(NNContext &ctx, const Vector &input) {
-    mul(activations, weights, input, weightInputMulWorkgroupSize);
-    add(activations, biases);
+    parallelMul(activations, weights, input, weightInputMulWorkgroupSize);
+    parallelAdd(activations, biases, activations);
 }
 
 static Kernel &predictFunction(NNContext &ctx, Layer::NeuronType type) {
