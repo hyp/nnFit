@@ -15,6 +15,8 @@ TensorKernels::Specialization::Specialization(Device &device, std::ifstream &is)
     matrixIdentity = Kernel(program, "matrixIdentity");
     matrixVectorMul = Kernel(program, "matrixVectorMul");
     matrixVectorMul4 = Kernel(program, "matrixVectorMul4");
+    matrixVectorMulParallel = Kernel(program, "matrixVectorMulParallel");
+    matrixVectorMul4Parallel = Kernel(program, "matrixVectorMul4Parallel");
 }
 
 TensorKernels::TensorKernels(Device &device, std::ifstream &genericSource, std::ifstream &fixedSource) : floatKernels(device, genericSource), program(device, fixedSource) {
@@ -305,6 +307,38 @@ void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgrou
     kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()).setArg(3, partSize).setArg(4, dest);
     kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
     x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
+}
+    
+void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+    // Compute workgroup
+    size_t rowsPerWorkgroup = workgroupSizes[0];
+    size_t parts = workgroupSizes[1];
+    if (parts == 0) {
+        parts = selectRowPartion(x.columns());
+        rowsPerWorkgroup = selectColumnPartion(x.rows());
+    }
+    
+    assert(x.type() == y.type());
+    assert(x.type() == dest.type());
+    assert((y.size() % x.columns()) == 0);
+    assert((dest.size() % x.rows()) == 0);
+    size_t vectorCount = y.size() / x.columns();
+    assert(vectorCount == dest.size() / x.rows());
+    
+    size_t partSize = x.columns()/parts;
+    if (partSize % 4 == 0) {
+        assert(x.columns() % 4 == 0);
+        auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul4Parallel;
+        kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()/4).setArg(3, partSize/4).setArg(4, dest);
+        kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
+        x.device().queue().enqueue3Dim(kernel, Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
+        return;
+    }
+    
+    auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMulParallel;
+    kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()).setArg(3, partSize).setArg(4, dest);
+    kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
+    x.device().queue().enqueue3Dim(kernel, Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
 }
     
 } // namespace nnFit

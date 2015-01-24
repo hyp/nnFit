@@ -101,12 +101,13 @@ void testBLAS(Device &device) {
     
     // Matrix by vector
     {
+        // Force the use of a 'float4' version
         Matrix m(device, 400, 400);
         m.identity();
         Vector v(device, 400);
         v.fill(42.0f);
         Vector result(device, 400);
-        mul(result, m, v);
+        mul(result, m, v, Range2D(4, 4));
         assertEquals(result, std::vector<float>(result.size(), 42.0f));
     }
     {
@@ -126,6 +127,34 @@ void testBLAS(Device &device) {
         Vector result(device, 5);
         mul(result, m, v);
         assertEquals(result, { 6.0f, 6.0f, 6.0f, 6.0f, 6.0f });
+    }
+    
+    // Matrix by vector - multiple vectors at once
+    {
+        // Force the use of a 'float' version instead of 'float4'
+        Matrix m(device, 5, 3);
+        m.ones();
+        Vector v(device, { 1.0f,1.0f,1.0f, 2.0f,2.0f,2.0f, 3.0f,3.0f,3.0f });
+        Vector result(device, 15);
+        parallelMul(result, m, v);
+        assertEquals(result, { 3.0f,3.0f,3.0f,3.0f,3.0f, 6.0f,6.0f,6.0f,6.0f,6.0f, 9.0f,9.0f,9.0f,9.0f,9.0f });
+    }
+    {
+        // Force the use of a 'float4' version
+        Matrix m(device, 400, 400);
+        m.identity();
+        
+        Vector v(device, 1600);
+        std::vector<float> vs(1600);
+        std::fill(vs.begin(), vs.begin() + 400, 11.0f);
+        std::fill(vs.begin() + 400, vs.begin() + 800, 13.0f);
+        std::fill(vs.begin() + 800, vs.begin() + 1200, 42.0f);
+        std::fill(vs.begin() + 1200, vs.begin() + 1600, 69.0f);
+        v.write(vs);
+        
+        Vector result(device, 1600);
+        parallelMul(result, m, v, Range2D(4, 4));
+        assertEquals(result, vs);
     }
 }
 

@@ -121,3 +121,74 @@ kernel void matrixVectorMul4(global Scalar4 *matrix, global Scalar4 *vector, con
     }
 }
 
+kernel void matrixVectorMulParallel(global Scalar *matrix, global Scalar *vectors, const uint columns, const uint partSize, global Scalar *output, local Scalar *work) {
+    const global Scalar *vector = vectors + get_global_id(0)*columns;
+    // Compute partial dot product
+    size_t i = get_global_id(1);
+    size_t j = get_global_id(2);
+    size_t parts = get_global_size(2);
+    size_t k = j*partSize;
+    
+    Scalar partialSum = 0;
+    const global Scalar *row = matrix + i*columns;
+    for (size_t end = k + partSize; k < end; k++) {
+        partialSum += row[k] * vector[k];
+    }
+    
+    // Store the partial result in local work memory
+    size_t ii = get_local_id(1);
+    size_t jj = get_local_id(2);
+    size_t workColumns = get_local_size(2);
+    size_t workRowOffset = ii * workColumns;
+    work[workRowOffset + jj] = partialSum;
+    
+    // Wait until all the threads in this group have computed their partial sums
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    // The first thread in a given row sums all the partial sums produced by itself
+    // and the other threads in this row.
+    if (jj == 0) {
+        Scalar sum = 0;
+        for (size_t k = workRowOffset, end = workRowOffset + workColumns; k < end; ++k) {
+            sum += work[k];
+        }
+        output[get_global_id(0)*get_global_size(1) + i] = sum;
+    }
+}
+
+kernel void matrixVectorMul4Parallel(global Scalar4 *matrix, global Scalar4 *vectors, const uint columns, const uint partSize, global Scalar *output, local Scalar *work) {
+    const global Scalar4 *vector = vectors + get_global_id(0)*columns;
+    // Compute partial dot product
+    size_t i = get_global_id(1);
+    size_t j = get_global_id(2);
+    size_t parts = get_global_size(2);
+    size_t k = j*partSize;
+    
+    Scalar partialSum = 0;
+    const global Scalar4 *row = matrix + i*columns;
+    for (size_t end = k + partSize; k < end; k++) {
+        partialSum += dot(row[k], vector[k]);
+    }
+    
+    // Store the partial result in local work memory
+    size_t ii = get_local_id(1);
+    size_t jj = get_local_id(2);
+    size_t workColumns = get_local_size(2);
+    size_t workRowOffset = ii * workColumns;
+    work[workRowOffset + jj] = partialSum;
+    
+    // Wait until all the threads in this group have computed their partial sums
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    // The first thread in a given row sums all the partial sums produced by itself
+    // and the other threads in this row.
+    if (jj == 0) {
+        Scalar sum = 0;
+        for (size_t k = workRowOffset, end = workRowOffset + workColumns; k < end; ++k) {
+            sum += work[k];
+        }
+        output[get_global_id(0)*get_global_size(1) + i] = sum;
+    }
+}
+
+

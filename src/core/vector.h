@@ -23,6 +23,8 @@ public:
         Kernel matrixIdentity;
         Kernel matrixVectorMul;
         Kernel matrixVectorMul4;
+        Kernel matrixVectorMulParallel;
+        Kernel matrixVectorMul4Parallel;
         
         Specialization(Device &device, std::ifstream &is);
     };
@@ -177,5 +179,7 @@ void partialTrueCount(Vector &dest, const Vector &x);
 // Matrix by vector multiplication
 // dest = x * y
 void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+    
+void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
 } // namespace nnFit
