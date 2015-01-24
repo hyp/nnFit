@@ -208,12 +208,15 @@ void add(Vector &dest, const Vector &x, const Vector &y) {
 }
     
 void parallelAdd(Vector &dest, const Vector &x, const Vector &y) {
+    size_t vectorCount = dest.size() / x.size();
+    if (vectorCount == 1) {
+        return add(dest, x, y);
+    }
+    
     assert(x.type() == ValueType::Float);
     assert(dest.type() == x.type() && y.type() == x.type());
     assert(dest.size() == y.size());
     assert((dest.size() % x.size()) == 0);
-    
-    size_t vectorCount = dest.size()/x.size();
            
     auto &kernel = dest.device().tensorKernels().floatKernels.elementAddParallel;
     kernel.setArg(0, x).setArg(1, y).setArg(2, dest);
@@ -324,6 +327,11 @@ void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgrou
 }
     
 void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+    size_t vectorCount = y.size() / x.columns();
+    if (vectorCount == 1) {
+        return mul(dest, x, y, workgroupSizes);
+    }
+    
     // Compute workgroup
     size_t rowsPerWorkgroup = workgroupSizes[0];
     size_t parts = workgroupSizes[1];
@@ -336,7 +344,6 @@ void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &
     assert(x.type() == dest.type());
     assert((y.size() % x.columns()) == 0);
     assert((dest.size() % x.rows()) == 0);
-    size_t vectorCount = y.size() / x.columns();
     assert(vectorCount == dest.size() / x.rows());
     
     size_t partSize = x.columns()/parts;
