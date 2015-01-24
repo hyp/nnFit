@@ -102,6 +102,13 @@ void VectorSlice::copy(Vector &dest) const {
     dev.queue().copy(storage, dest.deviceStorage(), size()*elementSize, off*elementSize, 0);
 }
 
+void VectorSlice::copy(VectorSlice &dest) const {
+    assert(vtype == dest.type());
+    assert(size() == dest.size());
+    auto elementSize = vtype.size();
+    dev.queue().copy(storage, dest.storage, size()*elementSize, off*elementSize, dest.off*elementSize);
+}
+
 void Vector::resize(size_t size) {
     storage = std::move(Storage(dev, size*vtype.size()));
     length = size;

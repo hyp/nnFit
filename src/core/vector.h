@@ -51,6 +51,7 @@ public:
     }
     
     void copy(Vector &dest) const;
+    void copy(VectorSlice &dest) const;
     
 private:
     Device &dev;
