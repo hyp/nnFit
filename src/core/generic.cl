@@ -32,6 +32,12 @@ kernel void elementAdd(global Scalar *x, global Scalar *y, global Scalar *dest) 
     dest[i] = x[i] + y[i];
 }
 
+kernel void elementAddParallel(global Scalar *x, global Scalar *y, global Scalar *dest) {
+    size_t i = get_global_id(1);
+    size_t pi = get_global_id(0)*get_global_size(1) + i;
+    dest[pi] = x[i] + y[pi];
+}
+
 // dest = x * y
 kernel void elementMul(global Scalar *x, global Scalar *y, global Scalar *dest) {
     size_t i = get_global_id(0);

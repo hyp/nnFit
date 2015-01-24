@@ -8,6 +8,7 @@ TensorKernels::Specialization::Specialization(Device &device, std::ifstream &is)
     constantMul = Kernel(program, "constantMul");
     constantDiv = Kernel(program, "constantDiv");
     elementAdd = Kernel(program, "elementAdd");
+    elementAddParallel = Kernel(program, "elementAddParallel");
     elementSub = Kernel(program, "elementSub");
     elementMul = Kernel(program, "elementMul");
     fill = Kernel(program, "fill");
@@ -204,6 +205,19 @@ namespace nnFit {
 void add(Vector &dest, const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.elementAdd, dest, x, y);
+}
+    
+void parallelAdd(Vector &dest, const Vector &x, const Vector &y) {
+    assert(x.type() == ValueType::Float);
+    assert(dest.type() == x.type() && y.type() == x.type());
+    assert(dest.size() == y.size());
+    assert((dest.size() % x.size()) == 0);
+    
+    size_t vectorCount = dest.size()/x.size();
+           
+    auto &kernel = dest.device().tensorKernels().floatKernels.elementAddParallel;
+    kernel.setArg(0, x).setArg(1, y).setArg(2, dest);
+    dest.device().queue().enqueue2Dim(kernel, Range2D(vectorCount, x.size()));
 }
 
 void add(Vector &x, const Vector &y) {

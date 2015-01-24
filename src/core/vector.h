@@ -16,6 +16,7 @@ public:
         Kernel constantMul;
         Kernel constantDiv;
         Kernel elementAdd;
+        Kernel elementAddParallel;
         Kernel elementSub;
         Kernel elementMul;
         Kernel fill;
@@ -150,6 +151,11 @@ private:
 
 // dest = x + y
 void add(Vector &dest, const Vector &x, const Vector &y);
+// dest[0] = x + y[0]
+// dest[1] = x + y[1]
+//  ...
+// dest[N - 1] = x + y[N - 1]
+void parallelAdd(Vector &dest, const Vector &x, const Vector &y);
 // x = x + y
 void add(Vector &x, const Vector &y);
 // dest = x - y
