@@ -21,8 +21,8 @@ ClassificationEvaluator::Result ClassificationEvaluator::evaluate(Network &net) 
     for (size_t i = 0; i < size; ++i) {
         data.get(i, 1, input, output);
         const auto &hypothesis = net.predict(input);
-        kernel.setArg(0, hypothesis).setArg(1, i).setArg(2, classCount).setArg(3, labels).setArg(4, classificationResult);
-        device.queue().enqueue1Dim(kernel, 1);
+        kernel.setArg(0, hypothesis).setArg(1, classCount).setArg(2, labels).setArg(3, classificationResult);
+        device.queue().enqueue1Dim(kernel, 1, i);
     }
     
     // Compute the number of correct predictions

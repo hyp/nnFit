@@ -86,13 +86,13 @@ kernel void computeWeightGradient4(global Scalar *errorTerm, global Scalar4 *inp
     weightGradients[row*columns + column] += errorTerm[row] * input[column];
 }
 
-kernel void evaluateClassification(global Scalar *output, const uint n, const uint size, global ushort *labels, global uchar *dest) {
-    size_t part = n;//Later: get_global_id(0);
+kernel void evaluateClassification(global Scalar *outputs, const uint size, global ushort *labels, global uchar *dest) {
+    size_t part = get_global_id(0);
     
-    size_t i = 0, end = i + size;
-    Scalar maxValue = output[i];
-    size_t maxIndex = i;
-    for (++i; i < end; ++i) {
+    const global Scalar *output = outputs + size*(get_global_id(0) - get_global_offset(0));
+    Scalar maxValue = output[0];
+    size_t maxIndex = 0;
+    for (size_t i = 1; i < size; ++i) {
         if (output[i] > maxValue) {
             maxValue = output[i];
             maxIndex = i;
