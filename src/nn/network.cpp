@@ -62,7 +62,6 @@ void Network::tune() {
 }
 
 const Vector &Network::predict(const Vector &input) {
-    assert(input.size() == inputLayerSize);
     networkInput = &input;
     auto *x = &input;
     for (const auto &layer : layers) {
@@ -72,7 +71,6 @@ const Vector &Network::predict(const Vector &input) {
 }
 
 const Vector &Network::feedforward(const Vector &input) {
-    assert(input.size() == inputLayerSize);
     networkInput = &input;
     auto *x = &input;
     for (const auto &layer : layers) {
