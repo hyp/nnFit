@@ -91,6 +91,7 @@ public:
     void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset = Range2D());
     void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize);
     void enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset = Range3D());
+    void enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize);
     
     void fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize);
     void copy(const StorageRef &src, const StorageRef &dest, size_t size, size_t srcOffset = 0, size_t destOffset = 0);

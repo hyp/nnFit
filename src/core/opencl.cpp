@@ -233,6 +233,13 @@ void CommandQueue::enqueue3Dim(const Kernel &kernel, const Range3D &size, const 
     enqueueKernel(kernel, 3, sizes, offsets);
 }
 
+void CommandQueue::enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize) {
+    size_t sizes[] = { size[0], size[1], size[2] };
+    size_t offsets[] = { offset[0], offset[1], offset[2] };
+    size_t localSizes[] = { workgroupSize[0], workgroupSize[1], workgroupSize[2] };
+    enqueueKernel(kernel, 3, sizes, offsets, localSizes);
+}
+
 void CommandQueue::fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize) {
     auto error = clEnqueueFillBuffer(queue, dest.id(), pattern, patternSize, offset, size, 0, nullptr, nullptr);
     if (error != CL_SUCCESS) {
