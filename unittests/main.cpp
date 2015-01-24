@@ -242,13 +242,38 @@ void testLogicGates(Device &device) {
 
 void testBackprop(Device &device) {
     Network net(device);
-    Layer lastLayer(device, 2, 3, Layer::Sigmoid);
-    lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
-    lastLayer.errorTerm().write({ 2.5f, 0.75f });
-    Layer layer(device, 3, 1, Layer::Sigmoid);
-    layer.derivative().write({ 1.0f, 1.0f, 1.0f });
-    layer.computeErrorTerm(net.context(), lastLayer);
-    assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f });
+    {
+        Layer lastLayer(device, 2, 3, Layer::Sigmoid);
+        lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
+        lastLayer.errorTerm().write({ 2.5f, 0.75f });
+        Layer layer(device, 3, 1, Layer::Sigmoid);
+        layer.derivative().write({ 1.0f, 1.0f, 1.0f });
+        layer.computeErrorTerm(net.context(), lastLayer);
+        assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f });
+        
+        Vector input(device, { 1.0f });
+        layer.neuronBiasGradients().ones();
+        layer.neuronWeightGradients().zeros();
+        layer.computeGradients(net.context(), input);
+        assertEquals(layer.neuronBiasGradients(), { 6.75f, 10.0f, 13.25f });
+    }
+    
+    // Multiple vectors at once
+    {
+        Layer lastLayer(device, 2, 3, Layer::Sigmoid, 2);
+        lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
+        lastLayer.errorTerm().write({ 2.5f, 0.75f, 1.0f, 0.5f });
+        Layer layer(device, 3, 1, Layer::Sigmoid, 2);
+        layer.derivative().write({ 1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f });
+        layer.computeErrorTerm(net.context(), lastLayer);
+        assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f, 5.0f, 8.0f, 11.0f  });
+        
+        Vector input(device, { 1.0f, 2.0f });
+        layer.neuronBiasGradients().ones();
+        layer.neuronWeightGradients().zeros();
+        layer.computeGradients(net.context(), input);
+        assertEquals(layer.neuronBiasGradients(), { 11.75f, 18.0f, 24.25f });
+    }
 }
 
 void testTrainer(Device &device) {
@@ -320,11 +345,14 @@ void testMNIST(Device &device) {
     
     std::cout << "Finished loading MNIST dataset\n";
     
+    // How many training examples are processed in one forward-backward pass
+    const size_t parallelisationFactor = 50;
+    
     Network net(device);
     size_t imageSize = trainingSet.imageWidth()*trainingSet.imageHeight();
     net.inputLayer(imageSize);
-    net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, Layer::RectifiedLinearUnit)));
-    net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, Layer::Sigmoid)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, Layer::RectifiedLinearUnit, parallelisationFactor)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, Layer::Sigmoid, parallelisationFactor)));
     uint32_t seed = 12;
     std::cout << "Random initialization using seed '" << seed << "'\n";
     net.init(seed);
@@ -334,14 +362,14 @@ void testMNIST(Device &device) {
     std::cout << "Training network..\n";
     GradientDescent opt(device, 0.3);
     CrossEntropyCriterion criterion;
-    Trainer trainer(net, criterion, trainingSet);
+    Trainer trainer(net, criterion, trainingSet, parallelisationFactor);
     ClassificationEvaluator evaluator(testSet);
     trainer.reshuffleIndices = true;
     trainer.profile = true;
     // Train & evaluate
     trainer.afterIteration = [&] (size_t i, float cost) {
         std::cout << "Evaluating perfomance after " << (i+1) << " iteration(s):\n";
-        auto result = evaluator.evaluate(net);
+        auto result = evaluator.evaluate(net, parallelisationFactor);
         std::cout << "Cost (of last batch) " << cost << ", test set accuracy: " << result.correctPredictions << "/" << result.count << ", " << result.percentageOfCorrectPredictions() << "%\n";
     };
     trainer.miniBatchGradientDescent(opt, 30, 50);

@@ -6,7 +6,7 @@
 
 using namespace nnFit;
 
-Trainer::Trainer(Network &network, ErrorCriterion &criterion, Dataset &data) : network(network), criterion(criterion), data(data), trainingExampleCount(data.size()), input(network.device(), data.inputSize()), output(network.device(), data.outputSize()) {
+Trainer::Trainer(Network &network, ErrorCriterion &criterion, Dataset &data, size_t parallelisationFactor) : network(network), criterion(criterion), data(data), trainingExampleCount(data.size()), parallelisationFactor(parallelisationFactor) {
     reshuffleIndices = false;
     profile = false;
 }
@@ -20,14 +20,22 @@ void Trainer::miniBatchGradientDescent(Optimizer &opt, size_t iterations, size_t
 }
 
 void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
-    Vector errors(network.device(), data.outputSize());
+    Vector input(network.device(), data.inputSize() * parallelisationFactor);
+    Vector output(network.device(), data.outputSize() * parallelisationFactor);
+    Vector errors(network.device(), data.outputSize() * parallelisationFactor);
     Vector errorSum(network.device(), 1);
     std::vector<float> errs;
     
     auto weightsAndGradients = network.weightsAndGradients();
-    size_t batchCount = trainingExampleCount/miniBatchSize + (trainingExampleCount % miniBatchSize == 0? 0 : 1);
     
-    std::vector<size_t> indices(trainingExampleCount);
+    assert((trainingExampleCount % parallelisationFactor) == 0);
+    assert((trainingExampleCount % miniBatchSize) == 0);
+    assert((miniBatchSize % parallelisationFactor) == 0);
+    assert(miniBatchSize >= parallelisationFactor);
+    size_t batchCount = trainingExampleCount / miniBatchSize;
+    size_t passCount = trainingExampleCount / parallelisationFactor;
+    size_t passPerBatchCount = miniBatchSize / parallelisationFactor;
+    std::vector<size_t> indices(passCount);
     for (size_t i = 0; i < indices.size(); ++i)
         indices[i] = i;
     
@@ -42,7 +50,6 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             std::random_shuffle(indices.begin(), indices.end());
         
         for (size_t batch = 0; batch < batchCount; ++batch) {
-            size_t count = std::min(batch*miniBatchSize+miniBatchSize, trainingExampleCount) - batch*miniBatchSize;
             
             // Reset gradients
             for (auto &i : weightsAndGradients) {
@@ -50,8 +57,8 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             }
             
             // Train
-            for (size_t i = batch*miniBatchSize, end = i + count; i < end; ++i) {
-                data.get(indices[i], 1, input, output);
+            for (size_t i = 0; i < passPerBatchCount; ++i) {
+                data.get(indices[batch*passPerBatchCount + i]*parallelisationFactor, parallelisationFactor, input, output);
                 
                 const auto &prediction = network.feedforward(input);
                 criterion.computeError(network.context(), prediction, output, errors);
@@ -61,7 +68,7 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
             
             // gradients = gradients / numberOfTrainingExamples
             // Scale the gradients while optimizing to avoid redundant division step.
-            opt.optimize(weightsAndGradients, count);
+            opt.optimize(weightsAndGradients, miniBatchSize);
         }
         
         // Compute the iteration error.

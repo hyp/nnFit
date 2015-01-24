@@ -6,8 +6,8 @@
 
 using namespace nnFit;
 
-Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type)
-: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount), derivatives(device, neuronCount), neuronType(type) {
+Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type, size_t parallelisationFactor)
+: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), neuronType(type), parallelisationFactor(parallelisationFactor) {
 }
 
 void Layer::init(uint32_t seed) {
@@ -89,7 +89,7 @@ static Kernel &predictFunction(NNContext &ctx, Layer::NeuronType type) {
 }
 
 Vector &Layer::predict(NNContext &ctx, const Vector &input) {
-    assert(input.size() == inputCount());
+    assert(input.size() == inputCount()*parallelisationFactor);
     
     // activation = f(Wx + b)
     auto &queue = input.device().queue();
@@ -117,7 +117,7 @@ static Kernel &feedforwardFunction(NNContext &ctx, Layer::NeuronType type) {
 }
 
 Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
-    assert(input.size() == inputCount());
+    assert(input.size() == inputCount()*parallelisationFactor);
     
     // activation = f(Wx + b)
     // derivative = f'(Wx + b)
@@ -139,16 +139,30 @@ void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {
     auto &queue = weights.device().queue();
     auto &k = ctx.floatKernels.computeError;
     k.setArg(0, next.weights).setArg(1, next.errorTerm()).setArg(2, next.neuronCount()).setArg(3, next.weights.columns()).setArg(4, derivatives);
-    queue.enqueue1Dim(k, neuronCount());
+    queue.enqueue2Dim(k, Range2D(parallelisationFactor, neuronCount()));
 }
 
 void Layer::computeGradients(NNContext &ctx, const Vector &input) {
     // weightGradient += error * input'
-    // biasGradient += error
     bool use4wide = weightGradients.columns() % 4 == 0;
     auto &queue = weights.device().queue();
-    auto &k = use4wide? ctx.floatKernels.computeWeightGradients4 : ctx.floatKernels.computeWeightGradients;
-    k.setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients);
-    queue.enqueue2Dim(k, Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
-    add(biasGradients, errorTerm());
+    Kernel *kernel;
+    if (parallelisationFactor == 1) {
+        kernel = use4wide? &ctx.floatKernels.computeWeightGradients4 : &ctx.floatKernels.computeWeightGradients;
+        kernel->setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients);
+    } else {
+        kernel = use4wide? &ctx.floatKernels.computeWeightGradients4Parallel : &ctx.floatKernels.computeWeightGradientsParallel;
+        kernel->setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients).setArg(3, parallelisationFactor);
+    }
+    queue.enqueue2Dim(*kernel, Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
+    
+    // biasGradient += error
+    if (parallelisationFactor == 1) {
+        add(biasGradients, errorTerm());
+        return;
+    }
+    assert(errorTerm().size() == biasGradients.size()*parallelisationFactor);
+    auto &k = ctx.floatKernels.computeBiasGradients;
+    k.setArg(0, errorTerm()).setArg(1, parallelisationFactor).setArg(2, biasGradients);
+    queue.enqueue1Dim(k, biasGradients.size());
 }

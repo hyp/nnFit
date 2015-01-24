@@ -18,6 +18,9 @@ public:
         Kernel computeError;
         Kernel computeWeightGradients;
         Kernel computeWeightGradients4;
+        Kernel computeWeightGradientsParallel;
+        Kernel computeWeightGradients4Parallel;
+        Kernel computeBiasGradients;
         Kernel evaluateClassification;
         
         Specialization(Device &device, Program &program);

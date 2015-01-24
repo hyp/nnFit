@@ -15,7 +15,7 @@ public:
     bool reshuffleIndices;
     bool profile;
     
-    Trainer(Network &network, ErrorCriterion &criterion, Dataset &data);
+    Trainer(Network &network, ErrorCriterion &criterion, Dataset &data, size_t parallelisationFactor = 1);
     
     void gradientDescent(Optimizer &opt, size_t iterations);
     void miniBatchGradientDescent(Optimizer &opt, size_t iterations, size_t miniBatchSize);
@@ -30,8 +30,7 @@ private:
     ErrorCriterion &criterion;
     Dataset &data;
     size_t trainingExampleCount;
-    Vector input;
-    Vector output;
+    size_t parallelisationFactor;
 };
 
 } // namespace nnFit

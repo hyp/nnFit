@@ -14,7 +14,7 @@ public:
         RectifiedLinearUnit
     };
     
-    Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type);
+    Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type, size_t parallelisationFactor = 1);
     
     size_t neuronCount() const {
         return weights.rows();
@@ -69,6 +69,7 @@ private:
     Vector derivatives;
     Range2D weightInputMulWorkgroupSize;
     NeuronType neuronType;
+    size_t parallelisationFactor;
 };
 
 } // namespace nnFit

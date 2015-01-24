@@ -15,6 +15,9 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
     computeError = Kernel(program, "computeError");
     computeWeightGradients = Kernel(program, "computeWeightGradient");
     computeWeightGradients4 = Kernel(program, "computeWeightGradient4");
+    computeWeightGradientsParallel = Kernel(program, "computeWeightGradientParallel");
+    computeWeightGradients4Parallel = Kernel(program, "computeWeightGradient4Parallel");
+    computeBiasGradients = Kernel(program, "computeBiasGradient");
     evaluateClassification = Kernel(program, "evaluateClassification");
 }
 

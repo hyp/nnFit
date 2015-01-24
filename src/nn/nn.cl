@@ -60,14 +60,15 @@ kernel void computeCrossEntropyLayerError(global Scalar *activation, global Scal
 
 // The "responsibility" of a layer in a NN (except for the last one).
 // error = (W_next'*error_next .* derivative)
-kernel void computeError(global Scalar *nextLayerWeights, global Scalar *nextLayerError, const uint nextLayerNeuronCount, const uint columns, global Scalar *derivative) {
-    size_t i = get_global_id(0);
+kernel void computeError(global Scalar *nextLayerWeights, global Scalar *nextLayerErrors, const uint nextLayerNeuronCount, const uint columns, global Scalar *derivatives) {
+    size_t i = get_global_id(1);
     Scalar sum = 0;
     size_t offset = i; // index into the matrix column
+    const global Scalar *nextLayerError = nextLayerErrors + get_global_id(0)*nextLayerNeuronCount;
     for (size_t j = 0; j < nextLayerNeuronCount; j++, offset+=columns) {
         sum += nextLayerWeights[offset] * nextLayerError[j];
     }
-    derivative[i] *= sum;
+    derivatives[get_global_id(0)*get_global_size(1) + i] *= sum;
 }
 
 // gradients = error * input'
@@ -84,6 +85,40 @@ kernel void computeWeightGradient4(global Scalar *errorTerm, global Scalar4 *inp
     size_t column = get_global_id(1);
     size_t columns = get_global_size(1);
     weightGradients[row*columns + column] += errorTerm[row] * input[column];
+}
+
+kernel void computeWeightGradientParallel(global Scalar *errorTerm, global Scalar *input, global Scalar *weightGradients, const uint count) {
+    size_t row = get_global_id(0);
+    size_t rows = get_global_size(0);
+    size_t column = get_global_id(1);
+    size_t columns = get_global_size(1);
+    Scalar sum = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        sum += errorTerm[i*rows + row] * input[i*columns + column];
+    }
+    weightGradients[row*columns + column] += sum;
+}
+
+kernel void computeWeightGradient4Parallel(global Scalar *errorTerm, global Scalar4 *input, global Scalar4 *weightGradients, const uint count) {
+    size_t row = get_global_id(0);
+    size_t rows = get_global_size(0);
+    size_t column = get_global_id(1);
+    size_t columns = get_global_size(1);
+    Scalar4 sum = 0.0;
+    for (size_t i = 0; i < count; ++i) {
+        sum += errorTerm[i*rows + row] * input[i*columns + column];
+    }
+    weightGradients[row*columns + column] += sum;
+}
+
+kernel void computeBiasGradient(global Scalar *errorTerm, const uint count, global Scalar *biasGradients) {
+    size_t i = get_global_id(0);
+    Scalar sum = 0.0;
+    const global Scalar *errorTermEl = errorTerm + i;
+    for (size_t j = 0; j < count; ++j) {
+        sum += errorTermEl[j*get_global_size(0)];
+    }
+    biasGradients[i] += sum;
 }
 
 kernel void evaluateClassification(global Scalar *outputs, const uint size, global ushort *labels, global uchar *dest) {

@@ -18,7 +18,7 @@ public:
     
     ClassificationEvaluator(Dataset &data);
     
-    Result evaluate(Network &net);
+    Result evaluate(Network &net, size_t parallelisationFactor = 1);
 private:
     Dataset &data;
     size_t correctPredictions;
