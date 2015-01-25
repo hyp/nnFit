@@ -50,6 +50,10 @@ public:
         return vtype;
     }
     
+    const StorageRef &deviceStorage() const {
+        return storage;
+    }
+    
     void copy(Vector &dest) const;
     void copy(VectorSlice &dest) const;
     
@@ -104,6 +108,7 @@ public:
     }
     
     void copy(Vector &dest) const;
+    void copy(const VectorSlice &dest) const;
     
     template<typename T>
     void copy(std::vector<T> &dest) const {

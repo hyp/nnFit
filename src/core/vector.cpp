@@ -95,6 +95,12 @@ void Vector::copy(Vector &dest) const {
     dev.queue().copy(storage, dest.storage, size()*vtype.size(), 0, 0);
 }
 
+void Vector::copy(const VectorSlice &dest) const {
+    assert(vtype == dest.type());
+    assert(size() == dest.size());
+    dev.queue().copy(storage, dest.deviceStorage(), size()*vtype.size(), 0, dest.offset()*vtype.size());
+}
+
 void VectorSlice::copy(Vector &dest) const {
     assert(vtype == dest.type());
     assert(size() == dest.size());

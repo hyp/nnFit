@@ -67,6 +67,8 @@ void testVectors(Device &device) {
     
     x.copy(dest);
     assertEquals(dest, {1.0f,2.0f,3.0f,4.0f});
+    x.copy(dest.slice(0));
+    assertEquals(dest, {1.0f,2.0f,3.0f,4.0f});
     add(dest, y);
     assertEquals(dest, {1.0f,3.0f,8.0f,14.0f});
     
@@ -82,6 +84,11 @@ void testVectors(Device &device) {
     Vector dests(device, ys.size());
     parallelAdd(dests, x, ys);
     assertEquals(dests, {1.0f,3.0f,2.0f,4.0f, 6.0f,-8.0f,-2.0f,14.0f});
+    
+    // Slice copies
+    dests.zeros();
+    x.copy(dests.slice(1, 5));
+    assertEquals(dests, {0.0f,1.0f,2.0f,3.0f, 4.0f,0.0f,0.0f,0.0f});
 }
 
 void testSum(Device &device) {
