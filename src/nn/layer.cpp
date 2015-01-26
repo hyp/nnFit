@@ -6,8 +6,8 @@
 
 using namespace nnFit;
 
-Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type, size_t parallelisationFactor)
-: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), neuronType(type), parallelisationFactor(parallelisationFactor) {
+Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction, size_t parallelisationFactor)
+: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), function(transferFunction), parallelisationFactor(parallelisationFactor) {
 }
 
 void Layer::init(uint32_t seed) {
@@ -70,50 +70,18 @@ void Layer::tune() {
     std::cout << "Best workgroup size for "<<weights.rows() << " by " << weights.columns() << " matrix vector multiplication: " << weightInputMulWorkgroupSize[0] << ", " << weightInputMulWorkgroupSize[1] << "\n";
 }
 
-void Layer::predictLinear(NNContext &ctx, const Vector &input) {
+const Vector &Layer::predictLinear(NNContext &ctx, const Vector &input) {
     parallelMul(activations, weights, input, weightInputMulWorkgroupSize);
     parallelAdd(activations, biases, activations);
-}
-
-static Kernel &predictFunction(NNContext &ctx, Layer::NeuronType type) {
-    switch (type) {
-        case Layer::Sigmoid:
-            return ctx.floatKernels.sigmoidPredict;
-            break;
-        case Layer::RectifiedLinearUnit:
-            return ctx.floatKernels.reluPredict;
-            break;
-        default: break;
-    }
-    assert(false && "Invalid type");
+    return activations;
 }
 
 Vector &Layer::predict(NNContext &ctx, const Vector &input) {
     assert(input.size() == inputCount()*parallelisationFactor);
     
     // activation = f(Wx + b)
-    auto &queue = input.device().queue();
-    predictLinear(ctx, input);
-    
-    if (neuronType == Linear)
-        return activations;
-    auto &k = predictFunction(ctx, neuronType);
-    k.setArg(0, activations);
-    queue.enqueue1Dim(k, activations.size());
+    function.apply(ctx, predictLinear(ctx, input));
     return activations;
-}
-
-static Kernel &feedforwardFunction(NNContext &ctx, Layer::NeuronType type) {
-    switch (type) {
-        case Layer::Sigmoid:
-            return ctx.floatKernels.sigmoidFeedforward;
-            break;
-        case Layer::RectifiedLinearUnit:
-            return ctx.floatKernels.reluFeedforward;
-            break;
-        default: break;
-    }
-    assert(false && "Invalid type");
 }
 
 Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
@@ -121,16 +89,7 @@ Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
     
     // activation = f(Wx + b)
     // derivative = f'(Wx + b)
-    auto &queue = input.device().queue();
-    predictLinear(ctx, input);
-    
-    if (neuronType == Linear) {
-        derivatives.ones();
-        return activations;
-    }
-    auto &k = feedforwardFunction(ctx, neuronType);
-    k.setArg(0, activations).setArg(1, derivatives);
-    queue.enqueue1Dim(k, activations.size());
+    function.apply(ctx, predictLinear(ctx, input), derivatives);
     return activations;
 }
 

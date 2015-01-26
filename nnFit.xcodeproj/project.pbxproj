@@ -35,6 +35,7 @@
 		FA0D100B1A6C293900F395E5 /* nn.cl in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA0D0FCE1A6C282800F395E5 /* nn.cl */; };
 		FA0D100F1A6C296A00F395E5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA0D100E1A6C296A00F395E5 /* OpenCL.framework */; };
 		FA0D10101A6C296E00F395E5 /* libnnFit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA0D0F881A6C27B800F395E5 /* libnnFit.a */; };
+		FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E0C1A766C6300D3F820 /* transferFunction.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -95,6 +96,8 @@
 		FA0D10051A6C291E00F395E5 /* mnistDataset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mnistDataset.h; sourceTree = "<group>"; };
 		FA0D100E1A6C296A00F395E5 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		FA0D10111A6D227600F395E5 /* range.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = range.h; sourceTree = "<group>"; };
+		FA886E0B1A7669C000D3F820 /* transferFunction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transferFunction.h; sourceTree = "<group>"; };
+		FA886E0C1A766C6300D3F820 /* transferFunction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = transferFunction.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +142,7 @@
 		FA0D0F8A1A6C27B800F395E5 /* nnFit */ = {
 			isa = PBXGroup;
 			children = (
+				FA886E021A75671600D3F820 /* rnn */,
 				FA0D0FEF1A6C28A000F395E5 /* optimizers */,
 				FA0D0FDC1A6C283600F395E5 /* core */,
 				FA0D0FC51A6C282800F395E5 /* nn */,
@@ -160,6 +164,8 @@
 				FA0D0FCE1A6C282800F395E5 /* nn.cl */,
 				FA0D0FCF1A6C282800F395E5 /* trainer.cpp */,
 				FA0D0FD01A6C282800F395E5 /* trainer.h */,
+				FA886E0B1A7669C000D3F820 /* transferFunction.h */,
+				FA886E0C1A766C6300D3F820 /* transferFunction.cpp */,
 			);
 			name = nn;
 			path = src/nn;
@@ -203,6 +209,13 @@
 				FA0D10051A6C291E00F395E5 /* mnistDataset.h */,
 			);
 			path = unittests;
+			sourceTree = "<group>";
+		};
+		FA886E021A75671600D3F820 /* rnn */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = rnn;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -310,6 +323,7 @@
 				FA0D0FD11A6C282800F395E5 /* classificationEvaluator.cpp in Sources */,
 				FA0D0FD51A6C282800F395E5 /* layer.cpp in Sources */,
 				FA0D0FD31A6C282800F395E5 /* errorCriterion.cpp in Sources */,
+				FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */,
 				FA0D0FD71A6C282800F395E5 /* network.cpp in Sources */,
 				FA0D0FEA1A6C283600F395E5 /* opencl.cpp in Sources */,
 				FA0D0FE61A6C283600F395E5 /* dataset.cpp in Sources */,
@@ -491,6 +505,7 @@
 				FA0D0F951A6C27B800F395E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		FA0D10001A6C28E200F395E5 /* Build configuration list for PBXNativeTarget "unittests" */ = {
 			isa = XCConfigurationList;
@@ -499,6 +514,7 @@
 				FA0D10021A6C28E200F395E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

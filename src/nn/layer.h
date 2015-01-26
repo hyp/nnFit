@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/vector.h"
+#include "transferFunction.h"
 
 namespace nnFit {
 
@@ -8,13 +9,8 @@ class NNContext;
 
 class Layer {
 public:
-    enum NeuronType {
-        Linear,
-        Sigmoid,
-        RectifiedLinearUnit
-    };
     
-    Layer(Device &device, size_t neuronCount, size_t inputCount, NeuronType type, size_t parallelisationFactor = 1);
+    Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction = TransferFunction::Linear, size_t parallelisationFactor = 1);
     
     size_t neuronCount() const {
         return weights.rows();
@@ -22,8 +18,8 @@ public:
     size_t inputCount() const {
         return weights.columns();
     }
-    NeuronType type() const {
-        return neuronType;
+    const TransferFunction &transferFunction() const {
+        return function;
     }
     Matrix &neuronWeights() {
         return weights;
@@ -60,7 +56,7 @@ public:
     void computeGradients(NNContext &ctx, const Vector &input);
 private:
     Layer(const Layer&) = delete;
-    void predictLinear(NNContext &ctx, const Vector &input);
+    const Vector &predictLinear(NNContext &ctx, const Vector &input);
     Matrix weights;
     Vector biases;
     Matrix weightGradients;
@@ -68,7 +64,7 @@ private:
     Vector activations;
     Vector derivatives;
     Range2D weightInputMulWorkgroupSize;
-    NeuronType neuronType;
+    TransferFunction function;
     size_t parallelisationFactor;
 };
 

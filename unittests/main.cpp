@@ -190,9 +190,35 @@ void testBooleanOperations(Device &device) {
     assertEquals(result, { uint32_t(2), uint32_t(1), uint32_t(2), uint32_t(1) });
 }
 
+void testTransferFunctions(Device &device) {
+    Network net(device);
+    auto &ctx = net.context();
+    TransferFunction linear(TransferFunction::Linear);
+    TransferFunction sigmoid(TransferFunction::Sigmoid);
+    TransferFunction relu(TransferFunction::RectifiedLinearUnit);
+    
+    Vector input(device, {-5.0f, -1.0f, 0.5f, 1.0f, 5.0f});
+    Vector x(device, input.size());
+    Vector dx(device, x.size());
+    
+    input.copy(x);
+    assertEquals(linear.apply(ctx, x, dx), {-5.0f, -1.0f, 0.5f, 1.0f, 5.0f});
+    assertEquals(dx, {1.0f, 1.0f, 1.0f, 1.0f, 1.0f});
+    
+    input.copy(x);
+    assertEquals(relu.apply(ctx, x, dx), {0.0f, 0.0f, 0.5f, 1.0f, 5.0f});
+    assertEquals(dx, {0.0f, 0.0f, 1.0f, 1.0f, 1.0f});
+    
+    input.copy(x);
+    std::vector<float> hx;
+    sigmoid.apply(ctx, x, dx).copy(hx);
+    assert(hx[0] < 0.5f && hx[1] < 0.5f);
+    assert(hx[2] > 0.5f && hx[3] > 0.5f && hx[4] > 0.5f);
+}
+
 void testLayers(Device &device) {
     Network net(device);
-    Layer layer(device, 2, 2, Layer::Linear);
+    Layer layer(device, 2, 2);
     layer.neuronWeights().write({ 1.0f, 1.0f, 2.0f, 0.5f });
     layer.neuronBiases().write({ 0.0f, 1.0f });
     Vector input(device, { 1.0f, 2.0f });
@@ -223,7 +249,7 @@ void testLogicGates(Device &device) {
     {
         // OR gate
         Network net(device);
-        std::unique_ptr<Layer> layer(new Layer(device, 1, 2, Layer::Sigmoid));
+        std::unique_ptr<Layer> layer(new Layer(device, 1, 2, TransferFunction::Sigmoid));
         layer->neuronWeights().write({ 20.0f, 20.0f });
         layer->neuronBiases().write({ -10.0f });
         net.inputLayer(2).add(std::move(layer));
@@ -236,7 +262,7 @@ void testLogicGates(Device &device) {
     {
         // AND gate
         Network net(device);
-        std::unique_ptr<Layer> layer(new Layer(device, 1, 2, Layer::Sigmoid));
+        std::unique_ptr<Layer> layer(new Layer(device, 1, 2, TransferFunction::Sigmoid));
         layer->neuronWeights().write({ 10.0f, 10.0f });
         layer->neuronBiases().write({ -10.0f });
         net.inputLayer(2).add(std::move(layer));
@@ -250,10 +276,10 @@ void testLogicGates(Device &device) {
 void testBackprop(Device &device) {
     Network net(device);
     {
-        Layer lastLayer(device, 2, 3, Layer::Sigmoid);
+        Layer lastLayer(device, 2, 3, TransferFunction::Sigmoid);
         lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
         lastLayer.errorTerm().write({ 2.5f, 0.75f });
-        Layer layer(device, 3, 1, Layer::Sigmoid);
+        Layer layer(device, 3, 1, TransferFunction::Sigmoid);
         layer.derivative().write({ 1.0f, 1.0f, 1.0f });
         layer.computeErrorTerm(net.context(), lastLayer);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f });
@@ -267,10 +293,10 @@ void testBackprop(Device &device) {
     
     // Multiple vectors at once
     {
-        Layer lastLayer(device, 2, 3, Layer::Sigmoid, 2);
+        Layer lastLayer(device, 2, 3, TransferFunction::Sigmoid, 2);
         lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
         lastLayer.errorTerm().write({ 2.5f, 0.75f, 1.0f, 0.5f });
-        Layer layer(device, 3, 1, Layer::Sigmoid, 2);
+        Layer layer(device, 3, 1, TransferFunction::Sigmoid, 2);
         layer.derivative().write({ 1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f });
         layer.computeErrorTerm(net.context(), lastLayer);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f, 5.0f, 8.0f, 11.0f  });
@@ -299,7 +325,7 @@ void testTrainer(Device &device) {
     {
         // 2 - 3 Sigmoid - 1 Sigmoid XOR NN
         Network net(device);
-        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 3, 2, Layer::Sigmoid))).add(std::unique_ptr<Layer>(new Layer(device, 1, 3, Layer::Sigmoid)));
+        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 3, 2, TransferFunction::Sigmoid))).add(std::unique_ptr<Layer>(new Layer(device, 1, 3, TransferFunction::Sigmoid)));
         net.init(/* seed= */12);
 
         GradientDescent opt(device, 3.0);
@@ -324,7 +350,7 @@ void testTrainer(Device &device) {
     {
         // 2 - 5 ReLU - 1 Sigmoid XOR NN
         Network net(device);
-        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 5, 2, Layer::RectifiedLinearUnit))).add(std::unique_ptr<Layer>(new Layer(device, 1, 5, Layer::Sigmoid)));
+        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 5, 2, TransferFunction::RectifiedLinearUnit))).add(std::unique_ptr<Layer>(new Layer(device, 1, 5, TransferFunction::Sigmoid)));
         net.init(/* seed= */12);
         
         GradientDescent opt(device, 0.3);
@@ -358,8 +384,8 @@ void testMNIST(Device &device) {
     Network net(device);
     size_t imageSize = trainingSet.imageWidth()*trainingSet.imageHeight();
     net.inputLayer(imageSize);
-    net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, Layer::RectifiedLinearUnit, parallelisationFactor)));
-    net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, Layer::Sigmoid, parallelisationFactor)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, TransferFunction::RectifiedLinearUnit, parallelisationFactor)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, TransferFunction::Sigmoid, parallelisationFactor)));
     uint32_t seed = 12;
     std::cout << "Random initialization using seed '" << seed << "'\n";
     net.init(seed);
@@ -393,6 +419,7 @@ int main(int argc, const char * argv[]) {
     testSum(device);
     testBLAS(device);
     testBooleanOperations(device);
+    testTransferFunctions(device);
     testLayers(device);
     testLogicGates(device);
     testBackprop(device);
