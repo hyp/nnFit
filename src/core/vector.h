@@ -90,10 +90,10 @@ public:
     VectorSlice slice(size_t from) const;
     VectorSlice slice(size_t from, size_t to) const;
     
-    void dump();
-    void fill(float v);
-    void ones();
-    void zeros();
+    void dump() const;
+    void fill(float v) const;
+    void ones() const;
+    void zeros() const;
     
     template<typename T>
     void write(std::initializer_list<T> init) {

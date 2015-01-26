@@ -49,7 +49,7 @@ VectorSlice Vector::slice(size_t from, size_t to) const {
     return VectorSlice(dev, storage, to - from, from, vtype);
 }
 
-void Vector::dump() {
+void Vector::dump() const {
     assert(vtype == ValueType::Float);
     std::vector<float> v;
     copy(v);
@@ -60,7 +60,7 @@ void Vector::dump() {
     std::cout << "]\n";
 }
 
-void Vector::fill(float v) {
+void Vector::fill(float v) const {
     assert(vtype == ValueType::Float);
     auto &kernel = dev.tensorKernels().floatKernels.fill;
     kernel.setArg(0, *this);
@@ -71,11 +71,11 @@ void Vector::fill(float v) {
     // dev.queue().fill(storage, length*sizeof(float), 0, &v, sizeof(float));
 }
 
-void Vector::ones() {
+void Vector::ones() const {
     fill(1.0f);
 }
 
-void Vector::zeros() {
+void Vector::zeros() const {
     fill(0.0f);
 }
 
