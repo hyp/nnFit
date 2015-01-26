@@ -7,6 +7,7 @@
 #include "nn/trainer.h"
 #include "nn/errorCriterion.h"
 #include "nn/classificationEvaluator.h"
+#include "rnn/recurrentLayer.h"
 #include "optimizers/gradientDescent.h"
 #include "mnistDataset.h"
 
@@ -408,6 +409,44 @@ void testMNIST(Device &device) {
     trainer.miniBatchGradientDescent(opt, 30, 50);
 }
 
+void testRecurrentLayers(Device &device) {
+    Network net(device);
+    auto &ctx = net.context();
+    
+    // Bit parity RNN - outputs > 0.5 if the binary number has an even number of bits
+    RecurrentLayer hiddenLayer(device, 2, 1, TransferFunction::Sigmoid);
+    hiddenLayer.neuronBiases().write({ 15.0f, -15.0f });
+    hiddenLayer.neuronWeights().write({ -10.0f,-4.0f,-4.0f, 20.0f,10.0f,10.0f });
+    hiddenLayer.initalActivation().write({ 1.0f, 1.0f });
+    Layer outputLayer(device, 1, 2, TransferFunction::Sigmoid);
+    outputLayer.neuronBiases().write({ -15.0f });
+    outputLayer.neuronWeights().write({ 10.0f,10.0f });
+    
+    Vector bit0(device, { 0.0f });
+    Vector bit1(device, { 1.0f });
+    
+    // 2 Bit Sequences:
+    // 00
+    hiddenLayer.reset();
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit0)), true);
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit0)), true);
+    
+    // 01
+    hiddenLayer.reset();
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit0)), true);
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit1)), false);
+
+    // 10
+    hiddenLayer.reset();
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit1)), false);
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit0)), false);
+    
+    // 11
+    hiddenLayer.reset();
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit1)), false);
+    assertEquals(outputLayer.predict(ctx, hiddenLayer.predict(ctx, bit1)), true);
+}
+
 int main(int argc, const char * argv[]) {
     auto device = selectDevice();
     device.init();
@@ -424,6 +463,7 @@ int main(int argc, const char * argv[]) {
     testLogicGates(device);
     testBackprop(device);
     testTrainer(device);
+    testRecurrentLayers(device);
     testMNIST(device);
     
     return 0;

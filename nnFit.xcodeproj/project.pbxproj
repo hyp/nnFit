@@ -36,6 +36,8 @@
 		FA0D100F1A6C296A00F395E5 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA0D100E1A6C296A00F395E5 /* OpenCL.framework */; };
 		FA0D10101A6C296E00F395E5 /* libnnFit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA0D0F881A6C27B800F395E5 /* libnnFit.a */; };
 		FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E0C1A766C6300D3F820 /* transferFunction.cpp */; };
+		FA886E101A76787900D3F820 /* recurrentLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */; };
+		FA886E111A76787900D3F820 /* recurrentLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = FA886E0F1A76787900D3F820 /* recurrentLayer.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,6 +100,8 @@
 		FA0D10111A6D227600F395E5 /* range.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = range.h; sourceTree = "<group>"; };
 		FA886E0B1A7669C000D3F820 /* transferFunction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = transferFunction.h; sourceTree = "<group>"; };
 		FA886E0C1A766C6300D3F820 /* transferFunction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = transferFunction.cpp; sourceTree = "<group>"; };
+		FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = recurrentLayer.cpp; path = src/rnn/recurrentLayer.cpp; sourceTree = SOURCE_ROOT; };
+		FA886E0F1A76787900D3F820 /* recurrentLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recurrentLayer.h; path = src/rnn/recurrentLayer.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,6 +218,8 @@
 		FA886E021A75671600D3F820 /* rnn */ = {
 			isa = PBXGroup;
 			children = (
+				FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */,
+				FA886E0F1A76787900D3F820 /* recurrentLayer.h */,
 			);
 			name = rnn;
 			sourceTree = "<group>";
@@ -234,6 +240,7 @@
 				FA0D0FD21A6C282800F395E5 /* classificationEvaluator.h in Headers */,
 				FA0D0FEC1A6C283600F395E5 /* valueType.h in Headers */,
 				FA0D0FF61A6C28A000F395E5 /* gradientDescent.h in Headers */,
+				FA886E111A76787900D3F820 /* recurrentLayer.h in Headers */,
 				FA0D0FD41A6C282800F395E5 /* errorCriterion.h in Headers */,
 				FA0D0FEE1A6C283600F395E5 /* vector.h in Headers */,
 			);
@@ -325,6 +332,7 @@
 				FA0D0FD31A6C282800F395E5 /* errorCriterion.cpp in Sources */,
 				FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */,
 				FA0D0FD71A6C282800F395E5 /* network.cpp in Sources */,
+				FA886E101A76787900D3F820 /* recurrentLayer.cpp in Sources */,
 				FA0D0FEA1A6C283600F395E5 /* opencl.cpp in Sources */,
 				FA0D0FE61A6C283600F395E5 /* dataset.cpp in Sources */,
 			);
