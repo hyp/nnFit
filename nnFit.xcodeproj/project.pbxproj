@@ -38,6 +38,8 @@
 		FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E0C1A766C6300D3F820 /* transferFunction.cpp */; };
 		FA886E101A76787900D3F820 /* recurrentLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */; };
 		FA886E111A76787900D3F820 /* recurrentLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = FA886E0F1A76787900D3F820 /* recurrentLayer.h */; };
+		FA886E141A769FDB00D3F820 /* sequentialDataset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E121A769FDB00D3F820 /* sequentialDataset.cpp */; };
+		FA886E151A769FDB00D3F820 /* sequentialDataset.h in Headers */ = {isa = PBXBuildFile; fileRef = FA886E131A769FDB00D3F820 /* sequentialDataset.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +104,8 @@
 		FA886E0C1A766C6300D3F820 /* transferFunction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = transferFunction.cpp; sourceTree = "<group>"; };
 		FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = recurrentLayer.cpp; path = src/rnn/recurrentLayer.cpp; sourceTree = SOURCE_ROOT; };
 		FA886E0F1A76787900D3F820 /* recurrentLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recurrentLayer.h; path = src/rnn/recurrentLayer.h; sourceTree = SOURCE_ROOT; };
+		FA886E121A769FDB00D3F820 /* sequentialDataset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sequentialDataset.cpp; path = src/rnn/sequentialDataset.cpp; sourceTree = SOURCE_ROOT; };
+		FA886E131A769FDB00D3F820 /* sequentialDataset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sequentialDataset.h; path = src/rnn/sequentialDataset.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +224,8 @@
 			children = (
 				FA886E0E1A76787900D3F820 /* recurrentLayer.cpp */,
 				FA886E0F1A76787900D3F820 /* recurrentLayer.h */,
+				FA886E121A769FDB00D3F820 /* sequentialDataset.cpp */,
+				FA886E131A769FDB00D3F820 /* sequentialDataset.h */,
 			);
 			name = rnn;
 			sourceTree = "<group>";
@@ -239,6 +245,7 @@
 				FA0D0FDB1A6C282800F395E5 /* trainer.h in Headers */,
 				FA0D0FD21A6C282800F395E5 /* classificationEvaluator.h in Headers */,
 				FA0D0FEC1A6C283600F395E5 /* valueType.h in Headers */,
+				FA886E151A769FDB00D3F820 /* sequentialDataset.h in Headers */,
 				FA0D0FF61A6C28A000F395E5 /* gradientDescent.h in Headers */,
 				FA886E111A76787900D3F820 /* recurrentLayer.h in Headers */,
 				FA0D0FD41A6C282800F395E5 /* errorCriterion.h in Headers */,
@@ -331,6 +338,7 @@
 				FA0D0FD51A6C282800F395E5 /* layer.cpp in Sources */,
 				FA0D0FD31A6C282800F395E5 /* errorCriterion.cpp in Sources */,
 				FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */,
+				FA886E141A769FDB00D3F820 /* sequentialDataset.cpp in Sources */,
 				FA0D0FD71A6C282800F395E5 /* network.cpp in Sources */,
 				FA886E101A76787900D3F820 /* recurrentLayer.cpp in Sources */,
 				FA0D0FEA1A6C283600F395E5 /* opencl.cpp in Sources */,
