@@ -79,6 +79,10 @@ public:
         return length;
     }
     
+    bool isEmpty() const {
+        return length == 0;
+    }
+    
     const Storage &deviceStorage() const {
         return storage;
     }
