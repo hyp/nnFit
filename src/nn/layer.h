@@ -49,8 +49,8 @@ public:
     void init(uint32_t seed);
     void dump();
     void tune();
-    Vector &predict(NNContext &ctx, const Vector &input);
-    Vector &feedforward(NNContext &ctx, const Vector &input);
+    const Vector &predict(NNContext &ctx, const Vector &input);
+    const Vector &feedforward(NNContext &ctx, const Vector &input);
     
     void computeErrorTerm(NNContext &ctx, const Layer &next);
     void computeGradients(NNContext &ctx, const Vector &input);

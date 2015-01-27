@@ -76,21 +76,19 @@ const Vector &Layer::predictLinear(NNContext &ctx, const Vector &input) {
     return activations;
 }
 
-Vector &Layer::predict(NNContext &ctx, const Vector &input) {
+const Vector &Layer::predict(NNContext &ctx, const Vector &input) {
     assert(input.size() == inputCount()*parallelisationFactor);
     
     // activation = f(Wx + b)
-    function.apply(ctx, predictLinear(ctx, input));
-    return activations;
+    return function.apply(ctx, predictLinear(ctx, input));
 }
 
-Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
+const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
     assert(input.size() == inputCount()*parallelisationFactor);
     
     // activation = f(Wx + b)
     // derivative = f'(Wx + b)
-    function.apply(ctx, predictLinear(ctx, input), derivatives);
-    return activations;
+    return function.apply(ctx, predictLinear(ctx, input), derivatives);
 }
 
 void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {

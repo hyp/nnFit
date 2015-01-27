@@ -66,7 +66,7 @@ void Network::tune() {
 
 const Vector &Network::predict(const Vector &input) {
     networkInput = &input;
-    auto *x = &input;
+    const auto *x = &input;
     for (const auto &layer : layers) {
         x = &layer->predict(ctx, *x);
     }
@@ -75,7 +75,7 @@ const Vector &Network::predict(const Vector &input) {
 
 const Vector &Network::feedforward(const Vector &input) {
     networkInput = &input;
-    auto *x = &input;
+    const auto *x = &input;
     for (const auto &layer : layers) {
         x = &layer->feedforward(ctx, *x);
     }
