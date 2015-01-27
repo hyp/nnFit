@@ -160,42 +160,42 @@ private:
 };
 
 // dest = x + y
-void add(Vector &dest, const Vector &x, const Vector &y);
+void add(const Vector &dest, const Vector &x, const Vector &y);
 // dest[0] = x + y[0]
 // dest[1] = x + y[1]
 //  ...
 // dest[N - 1] = x + y[N - 1]
-void parallelAdd(Vector &dest, const Vector &x, const Vector &y);
+void parallelAdd(const Vector &dest, const Vector &x, const Vector &y);
 // x = x + y
-void add(Vector &x, const Vector &y);
+void add(const Vector &x, const Vector &y);
 // dest = x - y
-void sub(Vector &dest, const Vector &x, const Vector &y);
+void sub(const Vector &dest, const Vector &x, const Vector &y);
 // x = x - y
-void sub(Vector &x, const Vector &y);
+void sub(const Vector &x, const Vector &y);
 // dest = x * k
-void mul(Vector &dest, const Vector &x, float k);
+void mul(const Vector &dest, const Vector &x, float k);
 // x = x * k
-void mul(Vector &x, float k);
+void mul(const Vector &x, float k);
 // dest = x / k
-void div(Vector &dest, const Vector &x, float k);
+void div(const Vector &dest, const Vector &x, float k);
 // x = x / k
-void div(Vector &x, float k);
+void div(const Vector &x, float k);
 // dest = x .* y
-void elementwiseMul(Vector &dest, const Vector &x, const Vector &y);
+void elementwiseMul(const Vector &dest, const Vector &x, const Vector &y);
 // x = x .* y
-void elementwiseMul(Vector &x, const Vector &y);
+void elementwiseMul(const Vector &x, const Vector &y);
 
 // Computes a partial sum
-void partialSum(Vector &dest, const Vector &x);
+void partialSum(const Vector &dest, const Vector &x);
 
 // Counts the number of true values in x
 // x must be a uint8 vector, while dest must be a uint32 vector
-void partialTrueCount(Vector &dest, const Vector &x);
+void partialTrueCount(const Vector &dest, const Vector &x);
 
 // Matrix by vector multiplication
 // dest = x * y
-void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
-void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
 } // namespace nnFit

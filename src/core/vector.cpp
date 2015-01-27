@@ -159,7 +159,7 @@ void Matrix::resize(size_t rows, size_t columns) {
     sizes[1] = columns;
 }
 
-static void exec(Kernel &kernel, Vector &dest, const Vector &x, const Vector &y) {
+static void exec(Kernel &kernel, const Vector &dest, const Vector &x, const Vector &y) {
     assert(dest.type() == x.type() && y.type() == x.type());
     assert(dest.size() == x.size() && y.size() == x.size());
     
@@ -167,7 +167,7 @@ static void exec(Kernel &kernel, Vector &dest, const Vector &x, const Vector &y)
     dest.device().queue().enqueue1Dim(kernel, x.size());
 }
 
-static void exec(Kernel &kernel, Vector &x, const Vector &y) {
+static void exec(Kernel &kernel, const Vector &x, const Vector &y) {
     assert(y.type() == x.type());
     assert(y.size() == x.size());
     
@@ -175,7 +175,7 @@ static void exec(Kernel &kernel, Vector &x, const Vector &y) {
     x.device().queue().enqueue1Dim(kernel, x.size());
 }
 
-static void exec(Kernel &kernel, Vector &dest, const Vector &x, float y) {
+static void exec(Kernel &kernel, const Vector &dest, const Vector &x, float y) {
     assert(dest.type() == x.type());
     assert(dest.size() == x.size());
     
@@ -183,7 +183,7 @@ static void exec(Kernel &kernel, Vector &dest, const Vector &x, float y) {
     dest.device().queue().enqueue1Dim(kernel, x.size());
 }
 
-static void exec(Kernel &kernel, Vector &x, float y) {
+static void exec(Kernel &kernel, const Vector &x, float y) {
     assert(x.type() == ValueType::Float);
     kernel.setArg(0, x).setArg(1, y).setArg(2, x);
     x.device().queue().enqueue1Dim(kernel, x.size());
@@ -215,12 +215,12 @@ static size_t selectColumnPartion(size_t size) {
 
 namespace nnFit {
 
-void add(Vector &dest, const Vector &x, const Vector &y) {
+void add(const Vector &dest, const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.elementAdd, dest, x, y);
 }
     
-void parallelAdd(Vector &dest, const Vector &x, const Vector &y) {
+void parallelAdd(const Vector &dest, const Vector &x, const Vector &y) {
     size_t vectorCount = dest.size() / x.size();
     if (vectorCount == 1) {
         return add(dest, x, y);
@@ -236,52 +236,52 @@ void parallelAdd(Vector &dest, const Vector &x, const Vector &y) {
     dest.device().queue().enqueue2Dim(kernel, Range2D(vectorCount, x.size()));
 }
 
-void add(Vector &x, const Vector &y) {
+void add(const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(x.device().tensorKernels().floatKernels.elementAdd, x, y);
 }
 
-void sub(Vector &dest, const Vector &x, const Vector &y) {
+void sub(const Vector &dest, const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.elementSub, dest, x, y);
 }
 
-void sub(Vector &x, const Vector &y) {
+void sub(const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(x.device().tensorKernels().floatKernels.elementSub, x, y);
 }
 
-void mul(Vector &dest, const Vector &x, float k) {
+void mul(const Vector &dest, const Vector &x, float k) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.constantMul, dest, x, k);
 }
 
-void mul(Vector &x, float k) {
+void mul(const Vector &x, float k) {
     assert(x.type() == ValueType::Float);
     exec(x.device().tensorKernels().floatKernels.constantMul, x, k);
 }
 
-void div(Vector &dest, const Vector &x, float k) {
+void div(const Vector &dest, const Vector &x, float k) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.constantDiv, dest, x, k);
 }
 
-void div(Vector &x, float k) {
+void div(const Vector &x, float k) {
     assert(x.type() == ValueType::Float);
     exec(x.device().tensorKernels().floatKernels.constantDiv, x, k);
 }
 
-void elementwiseMul(Vector &dest, const Vector &x, const Vector &y) {
+void elementwiseMul(const Vector &dest, const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(dest.device().tensorKernels().floatKernels.elementMul, dest, x, y);
 }
 
-void elementwiseMul(Vector &x, const Vector &y) {
+void elementwiseMul(const Vector &x, const Vector &y) {
     assert(x.type() == ValueType::Float);
     exec(x.device().tensorKernels().floatKernels.elementMul, x, y);
 }
 
-void partialSum(Vector &dest, const Vector &x) {
+void partialSum(const Vector &dest, const Vector &x) {
     assert(x.type() == ValueType::Float);
     assert(dest.type() == x.type());
     
@@ -296,7 +296,7 @@ void partialSum(Vector &dest, const Vector &x) {
     x.device().queue().enqueue1Dim(kernel, partCount);
 }
 
-void partialTrueCount(Vector &dest, const Vector &x) {
+void partialTrueCount(const Vector &dest, const Vector &x) {
     assert(x.type() == ValueType::Uint8);
     assert(dest.type() == ValueType::Uint32);
     
@@ -308,7 +308,7 @@ void partialTrueCount(Vector &dest, const Vector &x) {
     x.device().queue().enqueue1Dim(kernel, partCount);
 }
     
-void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
     // Compute workgroup
     size_t rowsPerWorkgroup = workgroupSizes[0];
     size_t parts = workgroupSizes[1];
@@ -339,7 +339,7 @@ void mul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgrou
     x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
 }
     
-void parallelMul(Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
     size_t vectorCount = y.size() / x.columns();
     if (vectorCount == 1) {
         return mul(dest, x, y, workgroupSizes);
