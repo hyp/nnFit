@@ -139,7 +139,7 @@ private:
     Device &dev;
     cl_program program;
 };
-
+    
 class Kernel {
 public:
     Kernel();
@@ -166,6 +166,14 @@ private:
     Kernel(const Kernel &) = delete;
     cl_kernel kernel;
     const char *name;
+};
+    
+// LocalStorage - a utility structure that allow the user to allocate local memory
+// for an OpenCL workgroup.
+struct LocalStorage {
+    size_t size;
+        
+    LocalStorage(size_t size) : size(size) { }
 };
 
 class Storage {
