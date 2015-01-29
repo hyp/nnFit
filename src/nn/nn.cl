@@ -47,15 +47,15 @@ kernel void crossEntropyError(global Scalar *prediction, global Scalar *y, globa
 }
 
 // The "responsibility" of the last layer with MSE criterion.
-kernel void computeMSELayerError(global Scalar *activation, global Scalar *y, global Scalar *derivative) {
+kernel void computeMSELayerError(global Scalar *prediction, global Scalar *y, global Scalar *derivative, global Scalar *errorTerm) {
     size_t i = get_global_id(0);
-    derivative[i] = (activation[i] - y[i]) * derivative[i];
+    errorTerm[i] = (prediction[i] - y[i]) * derivative[i];
 }
 
 // The "responsibility" of the last layer with cross entropy error.
-kernel void computeCrossEntropyLayerError(global Scalar *activation, global Scalar *y, global Scalar *derivative) {
+kernel void computeCrossEntropyLayerError(global Scalar *prediction, global Scalar *y, global Scalar *errorTerm) {
     size_t i = get_global_id(0);
-    derivative[i] = activation[i] - y[i];
+    errorTerm[i] = prediction[i] - y[i];
 }
 
 // The "responsibility" of a layer in a NN (except for the last one).
