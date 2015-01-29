@@ -28,6 +28,12 @@ public:
     Specialization floatKernels;
     
     NNContext(Device &device);
+    
+    CommandQueue &queue() const {
+        return queue_;
+    }
+private:
+    CommandQueue &queue_;
 };
 
 class Network {

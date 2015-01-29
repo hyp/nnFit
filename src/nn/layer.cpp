@@ -94,7 +94,7 @@ const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
 void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {
     // error = (nextLayerWeights' * nextLayerError) .* derivative
     auto task = ctx.floatKernels.computeError(next.weights, next.errorTerm(), next.neuronCount(), next.weights.columns(), derivatives);
-    weights.device().queue().enqueue2Dim(task, Range2D(parallelisationFactor, neuronCount()));
+    ctx.queue().enqueue2Dim(task, Range2D(parallelisationFactor, neuronCount()));
 }
 
 static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t parallelisationFactor, bool use4wide) {
@@ -105,7 +105,7 @@ static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t paralleli
 }
 
 void Layer::computeGradients(NNContext &ctx, const Vector &input) {
-    auto &queue = weights.device().queue();
+    auto &queue = ctx.queue();
     // weightGradient += error * input'
     bool use4wide = weightGradients.columns() % 4 == 0;
     const auto &kernel = chooseWeightGradientKernel(ctx, parallelisationFactor, use4wide);

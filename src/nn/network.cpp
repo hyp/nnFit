@@ -21,7 +21,7 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
     evaluateClassification = Kernel(program, "evaluateClassification");
 }
 
-NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("nn.cl")) {
+NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("nn.cl")), queue_(device.queue()) {
 }
 
 Network::Network(Device &device) : dev(device), ctx(device) {

@@ -32,7 +32,7 @@ static const Kernel &feedforwardFunction(NNContext &ctx, TransferFunction::Kind 
 const Vector &TransferFunction::apply(NNContext &ctx, const Vector &input) const {
     if (kind == Linear)
         return input;
-    input.device().queue().enqueue1Dim(predictFunction(ctx, kind)(input), input.size());
+    ctx.queue().enqueue1Dim(predictFunction(ctx, kind)(input), input.size());
     return input;
 }
 
@@ -43,6 +43,6 @@ const Vector &TransferFunction::apply(NNContext &ctx, const Vector &input, const
         derivative.ones();
         return input;
     }
-    input.device().queue().enqueue1Dim(feedforwardFunction(ctx, kind)(input, derivative), input.size());
+    ctx.queue().enqueue1Dim(feedforwardFunction(ctx, kind)(input, derivative), input.size());
     return input;
 }
