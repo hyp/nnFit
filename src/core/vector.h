@@ -134,6 +134,10 @@ private:
     ValueType vtype;
 };
 
+inline KernelInvocation &operator <<(KernelInvocation &kernel, const Vector &x) {
+    return kernel << x.deviceStorage();
+}
+    
 class Matrix: public Vector {
 public:
     Matrix(Device &device);

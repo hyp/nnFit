@@ -208,36 +208,36 @@ void CommandQueue::enqueueKernel(const Kernel &kernel, unsigned dimensions, cons
     }
 }
 
-void CommandQueue::enqueue1Dim(const Kernel &kernel, size_t size, size_t offset) {
+void CommandQueue::enqueue1Dim(const KernelInvocation &kernel, size_t size, size_t offset) {
     size_t sizes[] = { size, 0, 0 };
     size_t offsets[] = { offset, 0, 0 };
-    enqueueKernel(kernel, 1, sizes, offsets);
+    enqueueKernel(kernel.kernel, 1, sizes, offsets);
 }
 
-void CommandQueue::enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset) {
+void CommandQueue::enqueue2Dim(const KernelInvocation &kernel, const Range2D &size, const Range2D &offset) {
     size_t sizes[] = { size[0], size[1], 0 };
     size_t offsets[] = { offset[0], offset[1], 0 };
-    enqueueKernel(kernel, 2, sizes, offsets);
+    enqueueKernel(kernel.kernel, 2, sizes, offsets);
 }
 
-void CommandQueue::enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize) {
+void CommandQueue::enqueue2Dim(const KernelInvocation &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize) {
     size_t sizes[] = { size[0], size[1], 0 };
     size_t offsets[] = { offset[0], offset[1], 0 };
     size_t localSizes[] = { workgroupSize[0], workgroupSize[1], 0 };
-    enqueueKernel(kernel, 2, sizes, offsets, localSizes);
+    enqueueKernel(kernel.kernel, 2, sizes, offsets, localSizes);
 }
 
-void CommandQueue::enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset) {
+void CommandQueue::enqueue3Dim(const KernelInvocation &kernel, const Range3D &size, const Range3D &offset) {
     size_t sizes[] = { size[0], size[1], size[2] };
     size_t offsets[] = { offset[0], offset[1], offset[2] };
-    enqueueKernel(kernel, 3, sizes, offsets);
+    enqueueKernel(kernel.kernel, 3, sizes, offsets);
 }
 
-void CommandQueue::enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize) {
+void CommandQueue::enqueue3Dim(const KernelInvocation &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize) {
     size_t sizes[] = { size[0], size[1], size[2] };
     size_t offsets[] = { offset[0], offset[1], offset[2] };
     size_t localSizes[] = { workgroupSize[0], workgroupSize[1], workgroupSize[2] };
-    enqueueKernel(kernel, 3, sizes, offsets, localSizes);
+    enqueueKernel(kernel.kernel, 3, sizes, offsets, localSizes);
 }
 
 void CommandQueue::fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize) {
@@ -341,32 +341,9 @@ Kernel &Kernel::operator =(Kernel &&other) {
     return *this;
 }
 
-Kernel &Kernel::setArg(unsigned i, const Vector &x) {
-    auto mem = x.deviceStorage().id();
-    clSetKernelArg(kernel, i, sizeof(mem), &mem);
-    return *this;
-}
-
-Kernel &Kernel::setArg(unsigned i, float x) {
-    clSetKernelArg(kernel, i, sizeof(x), &x);
-    return *this;
-}
-
-Kernel &Kernel::setArg(unsigned i, double x) {
-    clSetKernelArg(kernel, i, sizeof(x), &x);
-    return *this;
-}
-
-Kernel &Kernel::setArg(unsigned i, size_t x) {
-    assert(x <= std::numeric_limits<cl_uint>::max());
-    cl_uint y = (cl_uint)x;
-    clSetKernelArg(kernel, i, sizeof(y), &y);
-    return *this;
-}
-
-Kernel &Kernel::allocateLocalMemory(unsigned i, size_t size) {
-    clSetKernelArg(kernel, i, size, nullptr);
-    return *this;
+void KernelInvocation::pushArg(const void *p, size_t size) {
+    clSetKernelArg(kernel.id(), parameterId, size, p);
+    parameterId++;
 }
 
 Storage::Storage() : buffer(nullptr) {
@@ -395,4 +372,36 @@ Storage &Storage::operator = (Storage &&other) {
     buffer = other.buffer;
     other.buffer = nullptr;
     return *this;
+}
+
+namespace nnFit {
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, float x) {
+    kernel.pushArg(&x, sizeof(x));
+    return kernel;
+}
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, double x) {
+    kernel.pushArg(&x, sizeof(x));
+    return kernel;
+}
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, size_t n) {
+    assert(n <= std::numeric_limits<cl_uint>::max());
+    cl_uint x = (cl_uint)n;
+    kernel.pushArg(&x, sizeof(x));
+    return kernel;
+}
+
+KernelInvocation &operator <<(KernelInvocation &kernel, LocalStorage x) {
+    kernel.pushArg(nullptr, x.size);
+    return kernel;
+}
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, const Storage &storage) {
+    auto mem = storage.id();
+    kernel.pushArg(&mem, sizeof(mem));
+    return kernel;
+}
+    
 }

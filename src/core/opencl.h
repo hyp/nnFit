@@ -16,6 +16,7 @@ class Device;
 class CommandQueue;
 class Program;
 class Kernel;
+class KernelInvocation;
 class Storage;
 class StorageRef;
 class Vector;
@@ -87,11 +88,11 @@ public:
     CommandQueue(Device &device, bool profile = false);
     ~CommandQueue();
     
-    void enqueue1Dim(const Kernel &kernel, size_t size, size_t offset = 0);
-    void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset = Range2D());
-    void enqueue2Dim(const Kernel &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize);
-    void enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset = Range3D());
-    void enqueue3Dim(const Kernel &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize);
+    void enqueue1Dim(const KernelInvocation &kernel, size_t size, size_t offset = 0);
+    void enqueue2Dim(const KernelInvocation &kernel, const Range2D &size, const Range2D &offset = Range2D());
+    void enqueue2Dim(const KernelInvocation &kernel, const Range2D &size, const Range2D &offset, const Range2D &workgroupSize);
+    void enqueue3Dim(const KernelInvocation &kernel, const Range3D &size, const Range3D &offset = Range3D());
+    void enqueue3Dim(const KernelInvocation &kernel, const Range3D &size, const Range3D &offset, const Range3D &workgroupSize);
     
     void fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize);
     void copy(const StorageRef &src, const StorageRef &dest, size_t size, size_t srcOffset = 0, size_t destOffset = 0);
@@ -140,6 +141,34 @@ private:
     cl_program program;
 };
     
+class KernelInvocation {
+public:
+    explicit KernelInvocation(const Kernel &kernel) : kernel(kernel), parameterId(0) { }
+    
+    void pushArg(const void *p, size_t size);
+    
+    template<typename T>
+    KernelInvocation &pushArgs(const T &x) {
+        return *this << x;
+    }
+    
+    template<typename T, typename... Args>
+    KernelInvocation &pushArgs(const T &first, const Args &...args) {
+        *this << first;
+        return pushArgs(args...);
+    }
+    
+    const Kernel &kernel;
+private:
+    unsigned parameterId;
+};
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, float x);
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, double x);
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, size_t x);
+
 class Kernel {
 public:
     Kernel();
@@ -157,11 +186,20 @@ public:
     
     Kernel &operator =(Kernel &&other);
     
-    Kernel &setArg(unsigned i, const Vector &x);
-    Kernel &setArg(unsigned i, float x);
-    Kernel &setArg(unsigned i, double x);
-    Kernel &setArg(unsigned i, size_t x);
-    Kernel &allocateLocalMemory(unsigned i, size_t size);
+    template<typename T>
+    KernelInvocation operator ()(const T &x) const {
+        KernelInvocation invocation(*this);
+        invocation << x;
+        return invocation;
+    }
+    
+    template<typename T, typename... Args>
+    KernelInvocation operator ()(const T &x, const Args &...args) const {
+        KernelInvocation invocation(*this);
+        invocation << x;
+        invocation.pushArgs(args...);
+        return invocation;
+    }
 private:
     Kernel(const Kernel &) = delete;
     cl_kernel kernel;
@@ -175,6 +213,8 @@ struct LocalStorage {
         
     LocalStorage(size_t size) : size(size) { }
 };
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, LocalStorage x);
 
 class Storage {
 public:
@@ -192,6 +232,8 @@ private:
     Storage(const Storage &) = delete;
     cl_mem buffer;
 };
+    
+KernelInvocation &operator <<(KernelInvocation &kernel, const Storage &storage);
 
 class StorageRef {
 public:

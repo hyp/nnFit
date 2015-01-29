@@ -62,10 +62,7 @@ void Vector::dump() const {
 
 void Vector::fill(float v) const {
     assert(vtype == ValueType::Float);
-    auto &kernel = dev.tensorKernels().floatKernels.fill;
-    kernel.setArg(0, *this);
-    kernel.setArg(1, v);
-    dev.queue().enqueue1Dim(kernel, length);
+    dev.queue().enqueue1Dim(dev.tensorKernels().floatKernels.fill(*this, v), length);
     // FIXME:
     // Doesn't work reliably on 2014 Macbook Pro with Nvidia GPU
     // dev.queue().fill(storage, length*sizeof(float), 0, &v, sizeof(float));
@@ -148,9 +145,7 @@ VectorSlice Matrix::row(size_t i, size_t count) const {
 }
 
 void Matrix::identity() {
-    auto &kernel = device().tensorKernels().floatKernels.matrixIdentity;
-    kernel.setArg(0, *this).setArg(1, columns());
-    device().queue().enqueue2Dim(kernel, Range2D(sizes[0], sizes[1]));
+    device().queue().enqueue2Dim(device().tensorKernels().floatKernels.matrixIdentity(*this, columns()), Range2D(sizes[0], sizes[1]));
 }
 
 void Matrix::resize(size_t rows, size_t columns) {
@@ -163,30 +158,27 @@ static void exec(Kernel &kernel, const Vector &dest, const Vector &x, const Vect
     assert(dest.type() == x.type() && y.type() == x.type());
     assert(dest.size() == x.size() && y.size() == x.size());
     
-    kernel.setArg(0, x).setArg(1, y).setArg(2, dest);
-    dest.device().queue().enqueue1Dim(kernel, x.size());
+    dest.device().queue().enqueue1Dim(kernel(x, y, dest), x.size());
 }
 
 static void exec(Kernel &kernel, const Vector &x, const Vector &y) {
     assert(y.type() == x.type());
     assert(y.size() == x.size());
-    
-    kernel.setArg(0, x).setArg(1, y).setArg(2, x);
-    x.device().queue().enqueue1Dim(kernel, x.size());
+
+    x.device().queue().enqueue1Dim(kernel(x, y, x), x.size());
 }
 
 static void exec(Kernel &kernel, const Vector &dest, const Vector &x, float y) {
     assert(dest.type() == x.type());
     assert(dest.size() == x.size());
     
-    kernel.setArg(0, x).setArg(1, y).setArg(2, dest);
-    dest.device().queue().enqueue1Dim(kernel, x.size());
+    dest.device().queue().enqueue1Dim(kernel(x, y, dest), x.size());
 }
 
 static void exec(Kernel &kernel, const Vector &x, float y) {
     assert(x.type() == ValueType::Float);
-    kernel.setArg(0, x).setArg(1, y).setArg(2, x);
-    x.device().queue().enqueue1Dim(kernel, x.size());
+
+    x.device().queue().enqueue1Dim(kernel(x, y, x), x.size());
 }
 
 // Selects a decent work group size for a row
@@ -231,9 +223,8 @@ void parallelAdd(const Vector &dest, const Vector &x, const Vector &y) {
     assert(dest.size() == y.size());
     assert((dest.size() % x.size()) == 0);
            
-    auto &kernel = dest.device().tensorKernels().floatKernels.elementAddParallel;
-    kernel.setArg(0, x).setArg(1, y).setArg(2, dest);
-    dest.device().queue().enqueue2Dim(kernel, Range2D(vectorCount, x.size()));
+    auto task = dest.device().tensorKernels().floatKernels.elementAddParallel(x, y, dest);
+    dest.device().queue().enqueue2Dim(task, Range2D(vectorCount, x.size()));
 }
 
 void add(const Vector &x, const Vector &y) {
@@ -288,12 +279,7 @@ void partialSum(const Vector &dest, const Vector &x) {
     size_t partCount = dest.size();
     size_t partSize = x.size()/partCount + (x.size()%partCount == 0? 0 : 1);
     
-    auto &kernel = x.device().tensorKernels().floatKernels.partialSum;
-    kernel.setArg(0, x);
-    kernel.setArg(1, x.size());
-    kernel.setArg(2, partSize);
-    kernel.setArg(3, dest);
-    x.device().queue().enqueue1Dim(kernel, partCount);
+    x.device().queue().enqueue1Dim(x.device().tensorKernels().floatKernels.partialSum(x, x.size(), partSize, dest), partCount);
 }
 
 void partialTrueCount(const Vector &dest, const Vector &x) {
@@ -303,9 +289,7 @@ void partialTrueCount(const Vector &dest, const Vector &x) {
     size_t partCount = dest.size();
     size_t partSize = x.size()/partCount + (x.size()%partCount == 0? 0 : 1);
     
-    auto &kernel = x.device().tensorKernels().partialTrueCount;
-    kernel.setArg(0, x).setArg(1, x.size()).setArg(2, partSize).setArg(3, dest);
-    x.device().queue().enqueue1Dim(kernel, partCount);
+    x.device().queue().enqueue1Dim(x.device().tensorKernels().partialTrueCount(x, x.size(), partSize, dest), partCount);
 }
     
 void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
@@ -326,17 +310,13 @@ void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &wo
     if (partSize % 4 == 0) {
         assert(x.columns() % 4 == 0);
         auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul4;
-        kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()/4).setArg(3, partSize/4).setArg(4, dest);
-        kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
-        x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
+        x.device().queue().enqueue2Dim(kernel(x, y, x.columns()/4, partSize/4, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
         return;
     }
     
     // Shedule
     auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul;
-    kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()).setArg(3, partSize).setArg(4, dest);
-    kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
-    x.device().queue().enqueue2Dim(kernel, Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
+    x.device().queue().enqueue2Dim(kernel(x, y, x.columns(), partSize, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
 }
     
 void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
@@ -363,16 +343,12 @@ void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Ran
     if (partSize % 4 == 0) {
         assert(x.columns() % 4 == 0);
         auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMul4Parallel;
-        kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()/4).setArg(3, partSize/4).setArg(4, dest);
-        kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
-        x.device().queue().enqueue3Dim(kernel, Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
+        x.device().queue().enqueue3Dim(kernel(x, y, x.columns()/4, partSize/4, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
         return;
     }
     
     auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMulParallel;
-    kernel.setArg(0, x).setArg(1, y).setArg(2, x.columns()).setArg(3, partSize).setArg(4, dest);
-    kernel.allocateLocalMemory(5, parts*rowsPerWorkgroup*x.type().size());
-    x.device().queue().enqueue3Dim(kernel, Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
+    x.device().queue().enqueue3Dim(kernel(x, y, x.columns(), partSize, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
 }
     
 } // namespace nnFit

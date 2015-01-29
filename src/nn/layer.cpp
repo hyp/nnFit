@@ -93,25 +93,23 @@ const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
 
 void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {
     // error = (nextLayerWeights' * nextLayerError) .* derivative
-    auto &queue = weights.device().queue();
-    auto &k = ctx.floatKernels.computeError;
-    k.setArg(0, next.weights).setArg(1, next.errorTerm()).setArg(2, next.neuronCount()).setArg(3, next.weights.columns()).setArg(4, derivatives);
-    queue.enqueue2Dim(k, Range2D(parallelisationFactor, neuronCount()));
+    auto task = ctx.floatKernels.computeError(next.weights, next.errorTerm(), next.neuronCount(), next.weights.columns(), derivatives);
+    weights.device().queue().enqueue2Dim(task, Range2D(parallelisationFactor, neuronCount()));
+}
+
+static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t parallelisationFactor, bool use4wide) {
+    if (parallelisationFactor == 1) {
+        return use4wide? ctx.floatKernels.computeWeightGradients4 : ctx.floatKernels.computeWeightGradients;
+    }
+    return use4wide? ctx.floatKernels.computeWeightGradients4Parallel : ctx.floatKernels.computeWeightGradientsParallel;
 }
 
 void Layer::computeGradients(NNContext &ctx, const Vector &input) {
+    auto &queue = weights.device().queue();
     // weightGradient += error * input'
     bool use4wide = weightGradients.columns() % 4 == 0;
-    auto &queue = weights.device().queue();
-    Kernel *kernel;
-    if (parallelisationFactor == 1) {
-        kernel = use4wide? &ctx.floatKernels.computeWeightGradients4 : &ctx.floatKernels.computeWeightGradients;
-        kernel->setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients);
-    } else {
-        kernel = use4wide? &ctx.floatKernels.computeWeightGradients4Parallel : &ctx.floatKernels.computeWeightGradientsParallel;
-        kernel->setArg(0, errorTerm()).setArg(1, input).setArg(2, weightGradients).setArg(3, parallelisationFactor);
-    }
-    queue.enqueue2Dim(*kernel, Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
+    const auto &kernel = chooseWeightGradientKernel(ctx, parallelisationFactor, use4wide);
+    queue.enqueue2Dim(parallelisationFactor == 1? kernel(errorTerm(), input, weightGradients) : kernel(errorTerm(), input, weightGradients, parallelisationFactor), Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
     
     // biasGradient += error
     if (parallelisationFactor == 1) {
@@ -119,7 +117,5 @@ void Layer::computeGradients(NNContext &ctx, const Vector &input) {
         return;
     }
     assert(errorTerm().size() == biasGradients.size()*parallelisationFactor);
-    auto &k = ctx.floatKernels.computeBiasGradients;
-    k.setArg(0, errorTerm()).setArg(1, parallelisationFactor).setArg(2, biasGradients);
-    queue.enqueue1Dim(k, biasGradients.size());
+    queue.enqueue1Dim(ctx.floatKernels.computeBiasGradients(errorTerm(), parallelisationFactor, biasGradients), biasGradients.size());
 }

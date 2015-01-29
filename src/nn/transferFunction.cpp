@@ -3,7 +3,7 @@
 
 using namespace nnFit;
 
-static Kernel &predictFunction(NNContext &ctx, TransferFunction::Kind kind) {
+static const Kernel &predictFunction(NNContext &ctx, TransferFunction::Kind kind) {
     switch (kind) {
     case TransferFunction::Sigmoid:
         return ctx.floatKernels.sigmoidPredict;
@@ -16,7 +16,7 @@ static Kernel &predictFunction(NNContext &ctx, TransferFunction::Kind kind) {
     assert(false && "Invalid transfer function");
 }
 
-static Kernel &feedforwardFunction(NNContext &ctx, TransferFunction::Kind kind) {
+static const Kernel &feedforwardFunction(NNContext &ctx, TransferFunction::Kind kind) {
     switch (kind) {
     case TransferFunction::Sigmoid:
         return ctx.floatKernels.sigmoidFeedforward;
@@ -32,10 +32,7 @@ static Kernel &feedforwardFunction(NNContext &ctx, TransferFunction::Kind kind) 
 const Vector &TransferFunction::apply(NNContext &ctx, const Vector &input) const {
     if (kind == Linear)
         return input;
-    auto &queue = input.device().queue();
-    auto &kernel = predictFunction(ctx, kind);
-    kernel.setArg(0, input);
-    queue.enqueue1Dim(kernel, input.size());
+    input.device().queue().enqueue1Dim(predictFunction(ctx, kind)(input), input.size());
     return input;
 }
 
@@ -46,9 +43,6 @@ const Vector &TransferFunction::apply(NNContext &ctx, const Vector &input, const
         derivative.ones();
         return input;
     }
-    auto &queue = input.device().queue();
-    auto &kernel = feedforwardFunction(ctx, kind);
-    kernel.setArg(0, input).setArg(1, derivative);
-    queue.enqueue1Dim(kernel, input.size());
+    input.device().queue().enqueue1Dim(feedforwardFunction(ctx, kind)(input, derivative), input.size());
     return input;
 }

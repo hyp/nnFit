@@ -9,11 +9,11 @@ GradientDescent::GradientDescent(Device &device, float learningRate)
 
 void GradientDescent::optimize(const std::vector<std::pair<Vector*, Vector*>> &weightsAndGradients, size_t trainingExamples) {
     auto &queue = device.queue();
+    float k = learningRate/float(trainingExamples);
     for (auto &i : weightsAndGradients) {
         auto &weights = *i.first;
         auto &gradients = *i.second;
-        
-        kernel.setArg(0, weights).setArg(1, gradients).setArg(2, learningRate/float(trainingExamples));
-        queue.enqueue1Dim(kernel, weights.size());
+
+        queue.enqueue1Dim(kernel(weights, gradients, k), weights.size());
     }
 }

@@ -17,13 +17,11 @@ ClassificationEvaluator::Result ClassificationEvaluator::evaluate(Network &net, 
     const auto &labels = *data.classificationLabels();
     Vector classificationResult(device, labels.size(), ValueType(ValueType::Uint8));
 
-    auto &kernel = net.context().floatKernels.evaluateClassification;
-    
+    auto &eval = net.context().floatKernels.evaluateClassification;
     for (size_t i = 0; i < size; i += parallelisationFactor) {
         data.get(i, parallelisationFactor, input, output);
         const auto &hypothesis = net.predict(input);
-        kernel.setArg(0, hypothesis).setArg(1, classCount).setArg(2, labels).setArg(3, classificationResult);
-        device.queue().enqueue1Dim(kernel, parallelisationFactor, i);
+        device.queue().enqueue1Dim(eval(hypothesis, classCount, labels, classificationResult), parallelisationFactor, i);
     }
     
     // Compute the number of correct predictions
