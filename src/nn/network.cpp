@@ -81,16 +81,14 @@ const Vector &Network::feedforward(const Vector &input) {
     return *x;
 }
 
-void Network::backpropagate() {
+void Network::backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion) {
     size_t i = layers.size() - 1;
-    const auto *error = &layers[i]->backpropagate(ctx);
+    const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != 0);
     layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
     
     for (; i != 0; ) {
         --i;
-        layers[i]->computeErrorTerm(ctx, *error);
-        if (i != 0)
-            error = &layers[i]->backpropagate(ctx);
+        error = &layers[i]->backpropagate(ctx, *error, i != 0);
         layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
     }
 }

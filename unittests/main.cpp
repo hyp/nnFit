@@ -298,7 +298,7 @@ void testBackprop(Device &device) {
         
         Layer layer(device, 3, 1, TransferFunction::Sigmoid);
         layer.derivative().write({1.0f, 1.0f, 1.0f});
-        layer.computeErrorTerm(net.context(), error);
+        layer.backpropagate(net.context(), error, false);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f });
         
         Vector input(device, { 1.0f });
@@ -318,7 +318,7 @@ void testBackprop(Device &device) {
         
         Layer layer(device, 3, 1, TransferFunction::Sigmoid, 2);
         layer.derivative().write({ 1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f });
-        layer.computeErrorTerm(net.context(), error);
+        layer.backpropagate(net.context(), error, false);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f, 5.0f, 8.0f, 11.0f  });
         
         Vector input(device, { 1.0f, 2.0f });

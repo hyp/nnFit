@@ -2,6 +2,7 @@
 #include <random>
 #include <array>
 #include "layer.h"
+#include "errorCriterion.h"
 #include "network.h"
 
 using namespace nnFit;
@@ -91,16 +92,30 @@ const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
     return function.apply(ctx, predictLinear(ctx, input), derivatives);
 }
 
-const Vector &Layer::backpropagate(NNContext &ctx) {
-    // Propagate error to the previous layer(s)
-    // errorOutput = transpose(Weights) * error
-    transposeMvmul(errorOutput, weights, errorTerm(), parallelisationFactor);
+const Vector &Layer::backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown) {
+    // error is computed by the error criterion
+    criterion.computeLayerError(ctx, activations, expectedOutput, derivatives, errorTerm());
+    // Propagate error to the previous layer(s) if needed.
+    if (backpropagateDown) {
+        backpropagate(ctx);
+    }
     return errorOutput;
 }
 
-void Layer::computeErrorTerm(NNContext &ctx, const Vector &errorInput) {
+const Vector &Layer::backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown) {
     // error = errorInput .* derivative
     elementwiseMul(derivatives, errorInput);
+    // Propagate error to the previous layer(s) if needed.
+    if (backpropagateDown) {
+        backpropagate(ctx);
+    }
+    return errorOutput;
+}
+
+const Vector &Layer::backpropagate(NNContext &ctx) {
+    // errorOutput = transpose(Weights) * error
+    transposeMvmul(errorOutput, weights, errorTerm(), parallelisationFactor);
+    return errorOutput;
 }
 
 static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t parallelisationFactor, bool use4wide) {

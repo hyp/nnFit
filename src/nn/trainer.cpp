@@ -62,8 +62,7 @@ void Trainer::train(Optimizer &opt, size_t iterations, size_t miniBatchSize) {
                 
                 const auto &prediction = network.feedforward(input);
                 criterion.computeError(network.context(), prediction, output, errors);
-                criterion.computeLayerError(network.context(), network.lastLayer().activation(), output, network.lastLayer().derivative(), network.lastLayer().errorTerm());
-                network.backpropagate();
+                network.backpropagate(output, criterion);
             }
             
             // gradients = gradients / numberOfTrainingExamples

@@ -12,7 +12,7 @@ class ErrorCriterion {
 public:
     virtual const Vector &computeError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, Vector &accumulatedErrors) = 0;
     
-    virtual void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) = 0;
+    virtual void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) const = 0;
 };
 
 // Mean squared error criterion.
@@ -22,7 +22,7 @@ public:
   
     const Vector &computeError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, Vector &accumulatedErrors) override;
 
-    void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) override;
+    void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) const override;
 };
 
 // Cross entropy error criterion.
@@ -31,7 +31,7 @@ class CrossEntropyCriterion : public ErrorCriterion {
 public:
     const Vector &computeError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, Vector &accumulatedErrors) override;
     
-    void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) override;
+    void computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) const override;
 };
 
 } // namespace nnFit

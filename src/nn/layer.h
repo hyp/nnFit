@@ -6,7 +6,8 @@
 namespace nnFit {
 
 class NNContext;
-
+class ErrorCriterion;
+    
 class Layer {
 public:
     
@@ -51,9 +52,10 @@ public:
     void tune();
     const Vector &predict(NNContext &ctx, const Vector &input);
     const Vector &feedforward(NNContext &ctx, const Vector &input);
-    const Vector &backpropagate(NNContext &ctx);
+    const Vector &backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown = true);
+    const Vector &backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown = true);
     
-    void computeErrorTerm(NNContext &ctx, const Vector &errorInput);
+    const Vector &backpropagate(NNContext &ctx);
     void computeGradients(NNContext &ctx, const Vector &input);
 private:
     Layer(const Layer&) = delete;

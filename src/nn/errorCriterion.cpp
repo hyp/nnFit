@@ -15,7 +15,7 @@ const Vector &MSECriterion::computeError(NNContext &ctx, const Vector &predictio
     return accumulatedErrors;
 }
 
-void MSECriterion::computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) {
+void MSECriterion::computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) const {
     checkLayerParams(prediction, expectedOutput, derivative, errorTerm);
     ctx.queue().enqueue1Dim(ctx.floatKernels.computeMSELayerError(prediction, expectedOutput, derivative, errorTerm), prediction.size());
 }
@@ -26,7 +26,7 @@ const Vector &CrossEntropyCriterion::computeError(NNContext &ctx, const Vector &
     return accumulatedErrors;
 }
 
-void CrossEntropyCriterion::computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) {
+void CrossEntropyCriterion::computeLayerError(NNContext &ctx, const Vector &prediction, const Vector &expectedOutput, const Vector &derivative, const Vector &errorTerm) const {
     checkLayerParams(prediction, expectedOutput, derivative, errorTerm);
     ctx.queue().enqueue1Dim(ctx.floatKernels.computeCrossEntropyLayerError(prediction, expectedOutput, errorTerm), prediction.size());
 }

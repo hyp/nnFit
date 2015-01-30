@@ -3,6 +3,8 @@
 #include "layer.h"
 
 namespace nnFit {
+    
+class ErrorCriterion;
 
 class NNContext {
 public:
@@ -67,7 +69,7 @@ public:
     void tune();
     const Vector &predict(const Vector &input);
     const Vector &feedforward(const Vector &input);
-    void backpropagate();
+    void backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion);
 private:
     Network(const Network&) = delete;
     Device &dev;
