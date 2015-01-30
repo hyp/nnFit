@@ -26,11 +26,6 @@ NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("n
 Network::Network(Device &device) : dev(device), ctx(device) {
 }
 
-Network &Network::inputLayer(size_t size) {
-    inputLayerSize = size;
-    return *this;
-}
-
 std::vector<std::pair<Vector*, Vector*>> Network::weightsAndGradients() {
     std::vector<std::pair<Vector*, Vector*>> result;
     for (const auto &layer: layers) {

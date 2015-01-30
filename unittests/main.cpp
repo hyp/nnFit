@@ -266,7 +266,7 @@ void testLogicGates(Device &device) {
         std::unique_ptr<Layer> layer(new Layer(device, 1, 2, TransferFunction::Sigmoid));
         layer->neuronWeights().write({ 20.0f, 20.0f });
         layer->neuronBiases().write({ -10.0f });
-        net.inputLayer(2).add(std::move(layer));
+        net.add(std::move(layer));
         assertEquals(net.predict(t00), false);
         assertEquals(net.predict(t10), true);
         assertEquals(net.predict(t01), true);
@@ -279,7 +279,7 @@ void testLogicGates(Device &device) {
         std::unique_ptr<Layer> layer(new Layer(device, 1, 2, TransferFunction::Sigmoid));
         layer->neuronWeights().write({ 10.0f, 10.0f });
         layer->neuronBiases().write({ -10.0f });
-        net.inputLayer(2).add(std::move(layer));
+        net.add(std::move(layer));
         assertEquals(net.predict(t00), false);
         assertEquals(net.predict(t10), false);
         assertEquals(net.predict(t01), false);
@@ -345,7 +345,8 @@ void testTrainer(Device &device) {
     {
         // 2 - 3 Sigmoid - 1 Sigmoid XOR NN
         Network net(device);
-        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 3, 2, TransferFunction::Sigmoid))).add(std::unique_ptr<Layer>(new Layer(device, 1, 3, TransferFunction::Sigmoid)));
+        net.add(std::unique_ptr<Layer>(new Layer(device, 3, 2, TransferFunction::Sigmoid)));
+        net.add(std::unique_ptr<Layer>(new Layer(device, 1, 3, TransferFunction::Sigmoid)));
         net.init(/* seed= */12);
 
         GradientDescent opt(device, 3.0);
@@ -370,7 +371,8 @@ void testTrainer(Device &device) {
     {
         // 2 - 5 ReLU - 1 Sigmoid XOR NN
         Network net(device);
-        net.inputLayer(2).add(std::unique_ptr<Layer>(new Layer(device, 5, 2, TransferFunction::RectifiedLinearUnit))).add(std::unique_ptr<Layer>(new Layer(device, 1, 5, TransferFunction::Sigmoid)));
+        net.add(std::unique_ptr<Layer>(new Layer(device, 5, 2, TransferFunction::RectifiedLinearUnit)));
+        net.add(std::unique_ptr<Layer>(new Layer(device, 1, 5, TransferFunction::Sigmoid)));
         net.init(/* seed= */12);
         
         GradientDescent opt(device, 0.3);
@@ -403,7 +405,6 @@ void testMNIST(Device &device) {
     
     Network net(device);
     size_t imageSize = trainingSet.imageWidth()*trainingSet.imageHeight();
-    net.inputLayer(imageSize);
     net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, TransferFunction::RectifiedLinearUnit, parallelisationFactor)));
     net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, TransferFunction::Sigmoid, parallelisationFactor)));
     uint32_t seed = 12;

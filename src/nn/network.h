@@ -50,8 +50,6 @@ public:
         return dev;
     }
     
-    Network &inputLayer(size_t size);
-    
     Network &add(std::unique_ptr<Layer> layer) {
         layers.push_back(std::move(layer));
         return *this;
@@ -74,7 +72,6 @@ private:
     Network(const Network&) = delete;
     Device &dev;
     NNContext ctx;
-    size_t inputLayerSize;
     std::vector<std::unique_ptr<Layer>> layers;
 };
 
