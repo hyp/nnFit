@@ -7,7 +7,7 @@
 using namespace nnFit;
 
 Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction, size_t parallelisationFactor)
-: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), function(transferFunction), parallelisationFactor(parallelisationFactor) {
+: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), errorOutput(device, inputCount*parallelisationFactor), function(transferFunction), parallelisationFactor(parallelisationFactor) {
 }
 
 void Layer::init(uint32_t seed) {
@@ -91,10 +91,16 @@ const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
     return function.apply(ctx, predictLinear(ctx, input), derivatives);
 }
 
-void Layer::computeErrorTerm(NNContext &ctx, const Layer &next) {
-    // error = (nextLayerWeights' * nextLayerError) .* derivative
-    auto task = ctx.floatKernels.computeError(next.weights, next.errorTerm(), next.neuronCount(), next.weights.columns(), derivatives);
-    ctx.queue().enqueue2Dim(task, Range2D(parallelisationFactor, neuronCount()));
+const Vector &Layer::backpropagate(NNContext &ctx) {
+    // Propagate error to the previous layer(s)
+    // errorOutput = transpose(Weights) * error
+    transposeMvmul(errorOutput, weights, errorTerm(), parallelisationFactor);
+    return errorOutput;
+}
+
+void Layer::computeErrorTerm(NNContext &ctx, const Vector &errorInput) {
+    // error = errorInput .* derivative
+    elementwiseMul(derivatives, errorInput);
 }
 
 static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t parallelisationFactor, bool use4wide) {

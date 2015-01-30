@@ -58,19 +58,6 @@ kernel void computeCrossEntropyLayerError(global Scalar *prediction, global Scal
     errorTerm[i] = prediction[i] - y[i];
 }
 
-// The "responsibility" of a layer in a NN (except for the last one).
-// error = (W_next'*error_next .* derivative)
-kernel void computeError(global Scalar *nextLayerWeights, global Scalar *nextLayerErrors, const uint nextLayerNeuronCount, const uint columns, global Scalar *derivatives) {
-    size_t i = get_global_id(1);
-    Scalar sum = 0;
-    size_t offset = i; // index into the matrix column
-    const global Scalar *nextLayerError = nextLayerErrors + get_global_id(0)*nextLayerNeuronCount;
-    for (size_t j = 0; j < nextLayerNeuronCount; j++, offset+=columns) {
-        sum += nextLayerWeights[offset] * nextLayerError[j];
-    }
-    derivatives[get_global_id(0)*get_global_size(1) + i] *= sum;
-}
-
 // gradients = error * input'
 // bias gradients are just added
 kernel void computeWeightGradient(global Scalar *errorTerm, global Scalar *input, global Scalar *weightGradients) {

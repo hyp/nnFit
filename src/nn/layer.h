@@ -51,8 +51,9 @@ public:
     void tune();
     const Vector &predict(NNContext &ctx, const Vector &input);
     const Vector &feedforward(NNContext &ctx, const Vector &input);
+    const Vector &backpropagate(NNContext &ctx);
     
-    void computeErrorTerm(NNContext &ctx, const Layer &next);
+    void computeErrorTerm(NNContext &ctx, const Vector &errorInput);
     void computeGradients(NNContext &ctx, const Vector &input);
 private:
     Layer(const Layer&) = delete;
@@ -63,6 +64,7 @@ private:
     Vector biasGradients;
     Vector activations;
     Vector derivatives;
+    Vector errorOutput;
     Range2D weightInputMulWorkgroupSize;
     TransferFunction function;
     size_t parallelisationFactor;

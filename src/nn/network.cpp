@@ -12,7 +12,6 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
     crossEntropyError = Kernel(program, "crossEntropyError");
     computeMSELayerError = Kernel(program, "computeMSELayerError");
     computeCrossEntropyLayerError = Kernel(program, "computeCrossEntropyLayerError");
-    computeError = Kernel(program, "computeError");
     computeWeightGradients = Kernel(program, "computeWeightGradient");
     computeWeightGradients4 = Kernel(program, "computeWeightGradient4");
     computeWeightGradientsParallel = Kernel(program, "computeWeightGradientParallel");
@@ -84,11 +83,14 @@ const Vector &Network::feedforward(const Vector &input) {
 
 void Network::backpropagate() {
     size_t i = layers.size() - 1;
+    const auto *error = &layers[i]->backpropagate(ctx);
     layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
     
     for (; i != 0; ) {
         --i;
-        layers[i]->computeErrorTerm(ctx, *layers[i + 1]);
+        layers[i]->computeErrorTerm(ctx, *error);
+        if (i != 0)
+            error = &layers[i]->backpropagate(ctx);
         layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
     }
 }

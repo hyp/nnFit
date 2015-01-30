@@ -293,9 +293,12 @@ void testBackprop(Device &device) {
         Layer lastLayer(device, 2, 3, TransferFunction::Sigmoid);
         lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
         lastLayer.errorTerm().write({ 2.5f, 0.75f });
+        const auto &error = lastLayer.backpropagate(net.context());
+        assertEquals(error, { 5.75f, 9.0f, 12.25f });
+        
         Layer layer(device, 3, 1, TransferFunction::Sigmoid);
-        layer.derivative().write({ 1.0f, 1.0f, 1.0f });
-        layer.computeErrorTerm(net.context(), lastLayer);
+        layer.derivative().write({1.0f, 1.0f, 1.0f});
+        layer.computeErrorTerm(net.context(), error);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f });
         
         Vector input(device, { 1.0f });
@@ -310,9 +313,12 @@ void testBackprop(Device &device) {
         Layer lastLayer(device, 2, 3, TransferFunction::Sigmoid, 2);
         lastLayer.neuronWeights().write({ 2.0f, 3.0f, 4.0f, 1.0f, 2.0f, 3.0f });
         lastLayer.errorTerm().write({ 2.5f, 0.75f, 1.0f, 0.5f });
+        const auto &error = lastLayer.backpropagate(net.context());
+        assertEquals(error, { 5.75f, 9.0f, 12.25f, 2.5f, 4.0f, 5.5f  });
+        
         Layer layer(device, 3, 1, TransferFunction::Sigmoid, 2);
         layer.derivative().write({ 1.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f });
-        layer.computeErrorTerm(net.context(), lastLayer);
+        layer.computeErrorTerm(net.context(), error);
         assertEquals(layer.errorTerm(), { 5.75f, 9.0f, 12.25f, 5.0f, 8.0f, 11.0f  });
         
         Vector input(device, { 1.0f, 2.0f });
