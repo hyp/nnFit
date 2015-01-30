@@ -64,7 +64,6 @@ void Network::tune() {
 }
 
 const Vector &Network::predict(const Vector &input) {
-    networkInput = &input;
     const auto *x = &input;
     for (const auto &layer : layers) {
         x = &layer->predict(ctx, *x);
@@ -73,7 +72,6 @@ const Vector &Network::predict(const Vector &input) {
 }
 
 const Vector &Network::feedforward(const Vector &input) {
-    networkInput = &input;
     const auto *x = &input;
     for (const auto &layer : layers) {
         x = &layer->feedforward(ctx, *x);
@@ -81,14 +79,14 @@ const Vector &Network::feedforward(const Vector &input) {
     return *x;
 }
 
-void Network::backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion) {
+void Network::backpropagate(const Vector &input, const Vector &expectedOutput, const ErrorCriterion &criterion) {
     size_t i = layers.size() - 1;
     const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != 0);
-    layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
+    layers[i]->computeGradients(ctx, i == 0? input : layers[i - 1]->activation());
     
     for (; i != 0; ) {
         --i;
         error = &layers[i]->backpropagate(ctx, *error, i != 0);
-        layers[i]->computeGradients(ctx, i == 0? *networkInput : layers[i - 1]->activation());
+        layers[i]->computeGradients(ctx, i == 0? input : layers[i - 1]->activation());
     }
 }
