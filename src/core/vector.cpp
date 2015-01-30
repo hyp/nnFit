@@ -292,7 +292,7 @@ void partialTrueCount(const Vector &dest, const Vector &x) {
     x.device().queue().enqueue1Dim(x.device().tensorKernels().partialTrueCount(x, x.size(), partSize, dest), partCount);
 }
     
-void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+void mvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
     // Compute workgroup
     size_t rowsPerWorkgroup = workgroupSizes[0];
     size_t parts = workgroupSizes[1];
@@ -319,10 +319,10 @@ void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &wo
     x.device().queue().enqueue2Dim(kernel(x, y, x.columns(), partSize, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range2D(x.rows(), parts), Range2D(), Range2D(rowsPerWorkgroup, parts));
 }
     
-void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
+void parallelMvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes) {
     size_t vectorCount = y.size() / x.columns();
     if (vectorCount == 1) {
-        return mul(dest, x, y, workgroupSizes);
+        return mvmul(dest, x, y, workgroupSizes);
     }
     
     // Compute workgroup

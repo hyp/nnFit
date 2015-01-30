@@ -121,7 +121,7 @@ void testBLAS(Device &device) {
         Vector v(device, 400);
         v.fill(42.0f);
         Vector result(device, 400);
-        mul(result, m, v, Range2D(4, 4));
+        mvmul(result, m, v, Range2D(4, 4));
         assertEquals(result, std::vector<float>(result.size(), 42.0f));
     }
     {
@@ -130,7 +130,7 @@ void testBLAS(Device &device) {
         Vector v(device, 400);
         v.fill(2.0f);
         Vector result(device, 10);
-        mul(result, m, v);
+        mvmul(result, m, v);
     }
     {
         // Force the use of a 'float' version instead of 'float4'
@@ -139,7 +139,7 @@ void testBLAS(Device &device) {
         Vector v(device, 3);
         v.fill(2.0f);
         Vector result(device, 5);
-        mul(result, m, v);
+        mvmul(result, m, v);
         assertEquals(result, { 6.0f, 6.0f, 6.0f, 6.0f, 6.0f });
     }
     
@@ -150,7 +150,7 @@ void testBLAS(Device &device) {
         m.ones();
         Vector v(device, { 1.0f,1.0f,1.0f, 2.0f,2.0f,2.0f, 3.0f,3.0f,3.0f });
         Vector result(device, 15);
-        parallelMul(result, m, v);
+        parallelMvmul(result, m, v);
         assertEquals(result, { 3.0f,3.0f,3.0f,3.0f,3.0f, 6.0f,6.0f,6.0f,6.0f,6.0f, 9.0f,9.0f,9.0f,9.0f,9.0f });
     }
     {
@@ -167,7 +167,7 @@ void testBLAS(Device &device) {
         v.write(vs);
         
         Vector result(device, 1600);
-        parallelMul(result, m, v, Range2D(4, 4));
+        parallelMvmul(result, m, v, Range2D(4, 4));
         assertEquals(result, vs);
     }
 }

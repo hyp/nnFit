@@ -198,8 +198,8 @@ void partialTrueCount(const Vector &dest, const Vector &x);
 
 // Matrix by vector multiplication
 // dest = x * y
-void mul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+void mvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
-void parallelMul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+void parallelMvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
 } // namespace nnFit

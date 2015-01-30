@@ -58,7 +58,7 @@ void Layer::tune() {
                 continue;
             auto time = device.profile([&, this] () {
                 for (size_t i = 0; i < iterations; ++i)
-                    parallelMul(output, weights, input, Range2D(rows, columns));
+                    parallelMvmul(output, weights, input, Range2D(rows, columns));
             });
             if (first || time < bestTime) {
                 weightInputMulWorkgroupSize = Range2D(rows, columns);
@@ -71,7 +71,7 @@ void Layer::tune() {
 }
 
 const Vector &Layer::predictLinear(NNContext &ctx, const Vector &input) {
-    parallelMul(activations, weights, input, weightInputMulWorkgroupSize);
+    parallelMvmul(activations, weights, input, weightInputMulWorkgroupSize);
     parallelAdd(activations, biases, activations);
     return activations;
 }
