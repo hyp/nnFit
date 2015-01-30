@@ -18,6 +18,7 @@ TensorKernels::Specialization::Specialization(Device &device, std::ifstream &is)
     matrixVectorMul4 = Kernel(program, "matrixVectorMul4");
     matrixVectorMulParallel = Kernel(program, "matrixVectorMulParallel");
     matrixVectorMul4Parallel = Kernel(program, "matrixVectorMul4Parallel");
+    transposeMatrixVectorMulParallel = Kernel(program, "transposeMatrixVectorMulParallel");
 }
 
 TensorKernels::TensorKernels(Device &device, std::ifstream &genericSource, std::ifstream &fixedSource) : floatKernels(device, genericSource), program(device, fixedSource) {
@@ -349,6 +350,14 @@ void parallelMvmul(const Vector &dest, const Matrix &x, const Vector &y, const R
     
     auto &kernel = x.device().tensorKernels().floatKernels.matrixVectorMulParallel;
     x.device().queue().enqueue3Dim(kernel(x, y, x.columns(), partSize, dest, LocalStorage(parts*rowsPerWorkgroup*x.type().size())), Range3D(vectorCount, x.rows(), parts), Range3D(), Range3D(1, rowsPerWorkgroup, parts));
+}
+    
+void transposeMvmul(const Vector &dest, const Matrix &x, const Vector &y, size_t vectorCount) {
+    assert(x.columns() * vectorCount == dest.size());
+    assert(x.rows() * vectorCount == y.size());
+    
+    auto task = x.device().tensorKernels().floatKernels.transposeMatrixVectorMulParallel(x, y, x.rows(), dest);
+    x.device().queue().enqueue2Dim(task, Range2D(vectorCount, x.columns()));
 }
     
 } // namespace nnFit

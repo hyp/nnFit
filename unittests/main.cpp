@@ -107,6 +107,12 @@ void testSum(Device &device) {
     assertEquals(x, {6.0f, 15.0f, 24.0f, 33.0f});
 }
 
+Matrix ones(Device &device, size_t rows, size_t columns) {
+    Matrix m(device, rows, columns);
+    m.ones();
+    return m;
+}
+
 void testBLAS(Device &device) {
     // Matrix identity
     Matrix eye(device, 4, 4);
@@ -169,6 +175,13 @@ void testBLAS(Device &device) {
         Vector result(device, 1600);
         parallelMvmul(result, m, v, Range2D(4, 4));
         assertEquals(result, vs);
+    }
+    
+    // Transposed matrix by vector multiplication
+    {
+        Vector result(device, 3);
+        transposeMvmul(result, ones(device, 5, 3), Vector(device, {2.0f,2.0f,2.0f,2.0f,2.0f}));
+        assertEquals(result, { 10.0f, 10.0f, 10.0f });
     }
 }
 

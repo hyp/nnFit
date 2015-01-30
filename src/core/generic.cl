@@ -197,4 +197,19 @@ kernel void matrixVectorMul4Parallel(global Scalar4 *matrix, global Scalar4 *vec
     }
 }
 
+kernel void transposeMatrixVectorMulParallel(global Scalar *matrix, global Scalar *vectors, const uint rows, global Scalar *output) {
+    const global Scalar *vector = vectors + get_global_id(0)*rows;
+    const size_t columns = get_global_size(1);
+    
+    // Compute the dot product of the matrix's column and one of the given vectors.
+    size_t i = get_global_id(1);
+    Scalar sum = 0;
+    size_t offset = i; // index into the matrix column
+    for (size_t j = 0; j < rows; j++, offset+=columns) {
+        sum += matrix[offset] * vector[j];
+    }
+    
+    output[get_global_id(0)*columns + i] = sum;
+}
+
 

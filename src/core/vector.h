@@ -26,6 +26,7 @@ public:
         Kernel matrixVectorMul4;
         Kernel matrixVectorMulParallel;
         Kernel matrixVectorMul4Parallel;
+        Kernel transposeMatrixVectorMulParallel;
         
         Specialization(Device &device, std::ifstream &is);
     };
@@ -201,5 +202,8 @@ void partialTrueCount(const Vector &dest, const Vector &x);
 void mvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
     
 void parallelMvmul(const Vector &dest, const Matrix &x, const Vector &y, const Range2D &workgroupSizes = Range2D());
+    
+// Transposed matrix by vector multiplication
+void transposeMvmul(const Vector &dest, const Matrix &x, const Vector &y, size_t vectorCount = 1);
     
 } // namespace nnFit
