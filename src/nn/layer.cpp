@@ -8,7 +8,7 @@
 using namespace nnFit;
 
 Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction, size_t parallelisationFactor)
-: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), derivatives(device, neuronCount*parallelisationFactor), errorOutput(device, inputCount*parallelisationFactor), function(transferFunction), parallelisationFactor(parallelisationFactor) {
+: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), errorTerms(device, neuronCount*parallelisationFactor), errorOutput(device, inputCount*parallelisationFactor), function(transferFunction), parallelisationFactor(parallelisationFactor) {
 }
 
 void Layer::init(uint32_t seed) {
@@ -89,12 +89,12 @@ const Vector &Layer::feedforward(NNContext &ctx, const Vector &input) {
     
     // activation = f(Wx + b)
     // derivative = f'(Wx + b)
-    return function.apply(ctx, predictLinear(ctx, input), derivatives);
+    return function.apply(ctx, predictLinear(ctx, input), /* derivatives= */ errorTerms);
 }
 
 const Vector &Layer::backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown) {
     // error is computed by the error criterion
-    criterion.computeLayerError(ctx, activations, expectedOutput, derivatives, errorTerm());
+    criterion.computeLayerError(ctx, activations, expectedOutput, /* derivatives= */ errorTerms, errorTerms);
     // Propagate error to the previous layer(s) if needed.
     if (backpropagateDown) {
         backpropagate(ctx);
@@ -103,8 +103,8 @@ const Vector &Layer::backpropagate(NNContext &ctx, const Vector &expectedOutput,
 }
 
 const Vector &Layer::backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown) {
-    // error = errorInput .* derivative
-    elementwiseMul(derivatives, errorInput);
+    // error = derivative .* errorInput
+    elementwiseMul(errorTerms, errorInput);
     // Propagate error to the previous layer(s) if needed.
     if (backpropagateDown) {
         backpropagate(ctx);
@@ -114,7 +114,7 @@ const Vector &Layer::backpropagate(NNContext &ctx, const Vector &errorInput, boo
 
 const Vector &Layer::backpropagate(NNContext &ctx) {
     // errorOutput = transpose(Weights) * error
-    transposeMvmul(errorOutput, weights, errorTerm(), parallelisationFactor);
+    transposeMvmul(errorOutput, weights, errorTerms, parallelisationFactor);
     return errorOutput;
 }
 
@@ -130,13 +130,13 @@ void Layer::computeGradients(NNContext &ctx, const Vector &input) {
     // weightGradient += error * input'
     bool use4wide = weightGradients.columns() % 4 == 0;
     const auto &kernel = chooseWeightGradientKernel(ctx, parallelisationFactor, use4wide);
-    queue.enqueue2Dim(parallelisationFactor == 1? kernel(errorTerm(), input, weightGradients) : kernel(errorTerm(), input, weightGradients, parallelisationFactor), Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
+    queue.enqueue2Dim(parallelisationFactor == 1? kernel(errorTerms, input, weightGradients) : kernel(errorTerms, input, weightGradients, parallelisationFactor), Range2D(weightGradients.rows(), use4wide? weightGradients.columns()/4 : weightGradients.columns()));
     
     // biasGradient += error
     if (parallelisationFactor == 1) {
-        add(biasGradients, errorTerm());
+        add(biasGradients, errorTerms);
         return;
     }
-    assert(errorTerm().size() == biasGradients.size()*parallelisationFactor);
-    queue.enqueue1Dim(ctx.floatKernels.computeBiasGradients(errorTerm(), parallelisationFactor, biasGradients), biasGradients.size());
+    assert(errorTerms.size() == biasGradients.size()*parallelisationFactor);
+    queue.enqueue1Dim(ctx.floatKernels.computeBiasGradients(errorTerms, parallelisationFactor, biasGradients), biasGradients.size());
 }

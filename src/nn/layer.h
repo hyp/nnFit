@@ -38,10 +38,10 @@ public:
         return activations;
     }
     const Vector &derivative() const {
-        return derivatives;
+        return errorTerms;
     }
     const Vector &errorTerm() const {
-        return derivatives;
+        return errorTerms;
     }
     
     void init(uint32_t seed);
@@ -62,7 +62,7 @@ private:
     Matrix weightGradients;
     Vector biasGradients;
     Vector activations;
-    Vector derivatives;
+    Vector errorTerms;
     Vector errorOutput;
     Range2D weightInputMulWorkgroupSize;
     TransferFunction function;
