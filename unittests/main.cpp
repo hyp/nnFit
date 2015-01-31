@@ -440,6 +440,7 @@ void testRecurrentLayers(Device &device) {
     hiddenLayer.neuronBiases().write({ 15.0f, -15.0f });
     hiddenLayer.neuronWeights().write({ -10.0f,-4.0f,-4.0f, 20.0f,10.0f,10.0f });
     hiddenLayer.initalActivation().write({ 1.0f, 1.0f });
+    hiddenLayer.unroll(2);
     Layer outputLayer(device, 1, 2, TransferFunction::Sigmoid);
     outputLayer.neuronBiases().write({ -15.0f });
     outputLayer.neuronWeights().write({ 10.0f,10.0f });

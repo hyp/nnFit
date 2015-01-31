@@ -24,12 +24,24 @@ public:
     void tune();
     
     void reset();
+    void unroll(size_t length);
     const Vector &predict(NNContext &ctx, const Vector &input);
+    const Vector &feedforward(NNContext &ctx, const Vector &input);
 private:
     RecurrentLayer(const RecurrentLayer&) = delete;
+    
+    struct UnrolledState {
+        Vector input;
+        Vector derivatives;
+        
+        UnrolledState(Device &device, size_t neuronCount, size_t inputSize);
+        UnrolledState(UnrolledState &&other);
+        UnrolledState(const UnrolledState &) = delete;
+    };
+    
     Layer layer;
-    Vector inputAndPreviousActivation;
     Vector initialActivations;
+    std::vector<UnrolledState> unrolledState;
     size_t currentSequenceLength;
 };
 
