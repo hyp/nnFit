@@ -43,6 +43,9 @@ public:
     const Vector &errorTerm() const {
         return errorTerms;
     }
+    const Vector &errorOutput() const {
+        return errorOutputs;
+    }
     
     void init(uint32_t seed);
     void dump();
@@ -64,7 +67,7 @@ private:
     Vector biasGradients;
     Vector activations;
     Vector errorTerms;
-    Vector errorOutput;
+    Vector errorOutputs;
     const Vector *previousInput;
     Range2D weightInputMulWorkgroupSize;
     TransferFunction function;

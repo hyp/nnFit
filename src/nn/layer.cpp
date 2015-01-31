@@ -8,7 +8,7 @@
 using namespace nnFit;
 
 Layer::Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction, size_t parallelisationFactor)
-: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), errorTerms(device, neuronCount*parallelisationFactor), errorOutput(device, inputCount*parallelisationFactor), previousInput(nullptr), function(transferFunction), parallelisationFactor(parallelisationFactor) {
+: weights(device, neuronCount, inputCount), biases(device, neuronCount), weightGradients(device, neuronCount, inputCount), biasGradients(device, neuronCount), activations(device, neuronCount*parallelisationFactor), errorTerms(device, neuronCount*parallelisationFactor), errorOutputs(device, inputCount*parallelisationFactor), previousInput(nullptr), function(transferFunction), parallelisationFactor(parallelisationFactor) {
 }
 
 void Layer::init(uint32_t seed) {
@@ -99,7 +99,7 @@ const Vector &Layer::backpropagate(NNContext &ctx, const Vector &expectedOutput,
     if (backpropagateDown) {
         backpropagate(ctx);
     }
-    return errorOutput;
+    return errorOutputs;
 }
 
 const Vector &Layer::backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown) {
@@ -109,13 +109,13 @@ const Vector &Layer::backpropagate(NNContext &ctx, const Vector &errorInput, boo
     if (backpropagateDown) {
         backpropagate(ctx);
     }
-    return errorOutput;
+    return errorOutputs;
 }
 
 const Vector &Layer::backpropagate(NNContext &ctx) {
     // errorOutput = transpose(Weights) * error
-    transposeMvmul(errorOutput, weights, errorTerms, parallelisationFactor);
-    return errorOutput;
+    transposeMvmul(errorOutputs, weights, errorTerms, parallelisationFactor);
+    return errorOutputs;
 }
 
 void Layer::updatePreviousInput(const Vector &input) {
