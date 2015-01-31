@@ -52,12 +52,12 @@ public:
     const Vector &backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown = true);
     const Vector &backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown = true);
     
+    const Vector &predictLinear(NNContext &ctx, const Vector &input);
     const Vector &backpropagate(NNContext &ctx);
     void updatePreviousInput(const Vector &input);
     void computeGradients(NNContext &ctx);
 private:
     Layer(const Layer&) = delete;
-    const Vector &predictLinear(NNContext &ctx, const Vector &input);
     Matrix weights;
     Vector biases;
     Matrix weightGradients;
