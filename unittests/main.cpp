@@ -304,7 +304,8 @@ void testBackprop(Device &device) {
         Vector input(device, { 1.0f });
         layer.neuronBiasGradients().ones();
         layer.neuronWeightGradients().zeros();
-        layer.computeGradients(net.context(), input);
+        layer.updatePreviousInput(input);
+        layer.computeGradients(net.context());
         assertEquals(layer.neuronBiasGradients(), { 6.75f, 10.0f, 13.25f });
     }
     
@@ -324,7 +325,8 @@ void testBackprop(Device &device) {
         Vector input(device, { 1.0f, 2.0f });
         layer.neuronBiasGradients().ones();
         layer.neuronWeightGradients().zeros();
-        layer.computeGradients(net.context(), input);
+        layer.updatePreviousInput(input);
+        layer.computeGradients(net.context());
         assertEquals(layer.neuronBiasGradients(), { 11.75f, 18.0f, 24.25f });
     }
 }

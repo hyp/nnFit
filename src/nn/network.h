@@ -67,7 +67,7 @@ public:
     void tune();
     const Vector &predict(const Vector &input);
     const Vector &feedforward(const Vector &input);
-    void backpropagate(const Vector &input, const Vector &expectedOutput, const ErrorCriterion &criterion);
+    void backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion);
 private:
     Network(const Network&) = delete;
     Device &dev;

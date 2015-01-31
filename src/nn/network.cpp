@@ -74,14 +74,14 @@ const Vector &Network::feedforward(const Vector &input) {
     return *x;
 }
 
-void Network::backpropagate(const Vector &input, const Vector &expectedOutput, const ErrorCriterion &criterion) {
+void Network::backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion) {
     size_t i = layers.size() - 1;
     const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != 0);
-    layers[i]->computeGradients(ctx, i == 0? input : layers[i - 1]->activation());
+    layers[i]->computeGradients(ctx);
     
     for (; i != 0; ) {
         --i;
         error = &layers[i]->backpropagate(ctx, *error, i != 0);
-        layers[i]->computeGradients(ctx, i == 0? input : layers[i - 1]->activation());
+        layers[i]->computeGradients(ctx);
     }
 }

@@ -53,7 +53,8 @@ public:
     const Vector &backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown = true);
     
     const Vector &backpropagate(NNContext &ctx);
-    void computeGradients(NNContext &ctx, const Vector &input);
+    void updatePreviousInput(const Vector &input);
+    void computeGradients(NNContext &ctx);
 private:
     Layer(const Layer&) = delete;
     const Vector &predictLinear(NNContext &ctx, const Vector &input);
@@ -64,6 +65,7 @@ private:
     Vector activations;
     Vector errorTerms;
     Vector errorOutput;
+    const Vector *previousInput;
     Range2D weightInputMulWorkgroupSize;
     TransferFunction function;
     size_t parallelisationFactor;
