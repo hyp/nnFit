@@ -77,17 +77,17 @@ void Vector::zeros() const {
     fill(0.0f);
 }
 
-void Vector::write(const void *data, size_t size) {
+void Vector::write(const void *data, size_t size) const {
     assert(length == size);
-    dev.queue().blockingWrite(*this, data, length*vtype.size());
+    dev.queue().blockingWrite(storage, data, length*vtype.size());
 }
 
 void Vector::read(void *data, size_t size) const {
     assert(length == size);
-    dev.queue().blockingRead(*this, data, length*vtype.size());
+    dev.queue().blockingRead(storage, data, length*vtype.size());
 }
 
-void Vector::copy(Vector &dest) const {
+void Vector::copy(const Vector &dest) const {
     assert(vtype == dest.vtype);
     assert(size() == dest.size());
     dev.queue().copy(storage, dest.storage, size()*vtype.size(), 0, 0);

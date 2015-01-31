@@ -254,15 +254,18 @@ void CommandQueue::copy(const StorageRef &src, const StorageRef &dest, size_t si
     }
 }
 
-void CommandQueue::blockingRead(const Vector &src, void *dest, size_t size, size_t offset) {
-    auto error = clEnqueueReadBuffer(queue, src.deviceStorage().id(), CL_TRUE, offset, size, dest, 0, nullptr, nullptr);
+void CommandQueue::blockingRead(const Storage &src, void *dest, size_t size, size_t offset) {
+    auto error = clEnqueueReadBuffer(queue, src.id(), CL_TRUE, offset, size, dest, 0, nullptr, nullptr);
     if (error != CL_SUCCESS) {
         device.error(error, "Failed to read a buffer");
     }
 }
 
-void CommandQueue::blockingWrite(Vector &dest, const void *src, size_t size, size_t offset) {
-    clEnqueueWriteBuffer(queue, dest.deviceStorage().id(), CL_TRUE, offset, size, src, 0, nullptr, nullptr);
+void CommandQueue::blockingWrite(const Storage &dest, const void *src, size_t size, size_t offset) {
+    auto error = clEnqueueWriteBuffer(queue, dest.id(), CL_TRUE, offset, size, src, 0, nullptr, nullptr);
+    if (error != CL_SUCCESS) {
+        device.error(error, "Failed to write to a buffer");
+    }
 }
 
 void CommandQueue::finish() {

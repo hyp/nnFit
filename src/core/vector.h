@@ -101,18 +101,18 @@ public:
     void zeros() const;
     
     template<typename T>
-    void write(std::initializer_list<T> init) {
+    void write(std::initializer_list<T> init) const {
         assert(vtype == valueType<T>());
         write(init.begin(), init.size());
     }
     
     template<typename T>
-    void write(const std::vector<T> &src) {
+    void write(const std::vector<T> &src) const {
         assert(vtype == valueType<T>());
         write(src.data(), src.size());
     }
     
-    void copy(Vector &dest) const;
+    void copy(const Vector &dest) const;
     void copy(const VectorSlice &dest) const;
     
     template<typename T>
@@ -125,7 +125,7 @@ public:
     
     void resize(size_t size);
 private:
-    void write(const void *data, size_t size);
+    void write(const void *data, size_t size) const;
     void read(void *data, size_t size) const;
     
     Vector(const Vector &) = delete;

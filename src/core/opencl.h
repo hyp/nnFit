@@ -96,8 +96,8 @@ public:
     
     void fill(const Storage &dest, size_t size, size_t offset, const void *pattern, size_t patternSize);
     void copy(const StorageRef &src, const StorageRef &dest, size_t size, size_t srcOffset = 0, size_t destOffset = 0);
-    void blockingRead(const Vector &src, void *dest, size_t size, size_t offset = 0);
-    void blockingWrite(Vector &dest, const void *src, size_t size, size_t offset = 0);
+    void blockingRead(const Storage &src, void *dest, size_t size, size_t offset = 0);
+    void blockingWrite(const Storage &dest, const void *src, size_t size, size_t offset = 0);
     
     void finish();
     void flush();
