@@ -8,13 +8,13 @@ class RecurrentLayer {
 public:
     RecurrentLayer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction);
     
-    Matrix &neuronWeights() {
+    const Matrix &neuronWeights() const {
         return layer.neuronWeights();
     }
-    Vector &neuronBiases() {
+    const Vector &neuronBiases() const {
         return layer.neuronBiases();
     }
-    Vector &initalActivation() {
+    const Vector &initalActivation() const {
         return initialActivations;
     }
     

@@ -26,8 +26,8 @@ NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("n
 Network::Network(Device &device) : dev(device), ctx(device) {
 }
 
-std::vector<std::pair<Vector*, Vector*>> Network::weightsAndGradients() {
-    std::vector<std::pair<Vector*, Vector*>> result;
+std::vector<std::pair<const Vector*, const Vector*>> Network::weightsAndGradients() {
+    std::vector<std::pair<const Vector*, const Vector*>> result;
     for (const auto &layer: layers) {
         result.push_back(std::make_pair(&layer->neuronWeights(), &layer->neuronWeightGradients()));
         result.push_back(std::make_pair(&layer->neuronBiases(), &layer->neuronBiasGradients()));

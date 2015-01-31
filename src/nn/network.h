@@ -55,7 +55,7 @@ public:
         return *this;
     }
     
-    std::vector<std::pair<Vector*, Vector*>> weightsAndGradients();
+    std::vector<std::pair<const Vector*, const Vector*>> weightsAndGradients();
     
     Layer &lastLayer() const {
         return *layers.back();

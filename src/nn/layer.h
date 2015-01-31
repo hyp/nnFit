@@ -22,28 +22,25 @@ public:
     const TransferFunction &transferFunction() const {
         return function;
     }
-    Matrix &neuronWeights() {
+    const Matrix &neuronWeights() const {
         return weights;
     }
-    Matrix &neuronWeightGradients() {
+    const Matrix &neuronWeightGradients() const {
         return weightGradients;
     }
-    Vector &neuronBiases() {
+    const Vector &neuronBiases() const {
         return biases;
     }
-    Vector &neuronBiasGradients() {
+    const Vector &neuronBiasGradients() const {
         return biasGradients;
     }
-    Vector &activation() {
+    const Vector &activation() const {
         return activations;
     }
-    Vector &derivative() {
+    const Vector &derivative() const {
         return derivatives;
     }
     const Vector &errorTerm() const {
-        return derivatives;
-    }
-    Vector &errorTerm() {
         return derivatives;
     }
     
