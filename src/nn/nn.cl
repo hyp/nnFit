@@ -123,22 +123,3 @@ kernel void evaluateClassification(global Scalar *outputs, const uint size, glob
     dest[part] = maxIndex == labels[part];
 }
 
-/*
-TODO:
-
-float parkMillerRandom(int *seed) {
-    double const a    = 16807;      //ie 7**5
-    double const m    = 2147483647; //ie 2**31-1
-    double const reciprocal_m = 1.0/m;
-    
-    double temp = *seed * a;
-    seed = (int)(temp - m * floor(temp * reciprocal_m));
-    return float(temp * reciprocal_m);
-}
-
-kernel void dropout(global Scalar *x, global int* seeds, const float discardProbability) {
-    size_t i = get_global_id(0);
-    int seed = seeds[i];
-    x[i] = parkMillerRandom(&seed);
-    seeds[i] = seed;
-}*/
