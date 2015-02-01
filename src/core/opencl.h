@@ -184,6 +184,10 @@ public:
         return kernel;
     }
     
+    inline operator bool() const {
+        return kernel != nullptr;
+    }
+    
     Kernel &operator =(Kernel &&other);
     
     template<typename T>
