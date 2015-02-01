@@ -65,6 +65,7 @@ private:
     Network(const Network&) = delete;
     Device &dev;
     NNContext ctx;
+    size_t backpropagateUntil;
     std::vector<std::unique_ptr<AbstractLayer>> layers;
 };
 

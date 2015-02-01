@@ -23,10 +23,13 @@ NNContext::Specialization::Specialization(Device &device, Program &program) {
 NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("nn.cl")), queue_(device.queue()) {
 }
 
-Network::Network(Device &device) : dev(device), ctx(device) {
+Network::Network(Device &device) : dev(device), ctx(device), backpropagateUntil(0) {
 }
 
 Network &Network::add(std::unique_ptr<AbstractLayer> layer) {
+    if (!layer->backpropagates() && backpropagateUntil == layers.size()) {
+        backpropagateUntil++;
+    }
     layers.push_back(std::move(layer));
     return *this;
 }
@@ -80,12 +83,12 @@ const Vector &Network::feedforward(const Vector &input) {
 
 void Network::backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion) {
     size_t i = layers.size() - 1;
-    const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != 0);
+    const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != backpropagateUntil);
     layers[i]->accumulateGradients(ctx);
     
-    for (; i != 0; ) {
+    for (; i != backpropagateUntil; ) {
         --i;
-        error = &layers[i]->backpropagate(ctx, *error, i != 0);
+        error = &layers[i]->backpropagate(ctx, *error, i != backpropagateUntil);
         layers[i]->accumulateGradients(ctx);
     }
 }
