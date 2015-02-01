@@ -40,6 +40,9 @@
 		FA886E111A76787900D3F820 /* recurrentLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = FA886E0F1A76787900D3F820 /* recurrentLayer.h */; };
 		FA886E141A769FDB00D3F820 /* sequentialDataset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA886E121A769FDB00D3F820 /* sequentialDataset.cpp */; };
 		FA886E151A769FDB00D3F820 /* sequentialDataset.h in Headers */ = {isa = PBXBuildFile; fileRef = FA886E131A769FDB00D3F820 /* sequentialDataset.h */; };
+		FA9BBAF71A7E2606008F5D77 /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA9BBAF51A7E2606008F5D77 /* random.cpp */; };
+		FA9BBAF81A7E2606008F5D77 /* random.h in Headers */ = {isa = PBXBuildFile; fileRef = FA9BBAF61A7E2606008F5D77 /* random.h */; };
+		FA9BBAFB1A7E2DCC008F5D77 /* random.cl in CopyFiles */ = {isa = PBXBuildFile; fileRef = FA9BBAF91A7E2CA8008F5D77 /* random.cl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +62,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
+				FA9BBAFB1A7E2DCC008F5D77 /* random.cl in CopyFiles */,
 				FA0D10081A6C293900F395E5 /* gradientDescent.cl in CopyFiles */,
 				FA0D10091A6C293900F395E5 /* fixed.cl in CopyFiles */,
 				FA0D100A1A6C293900F395E5 /* generic.cl in CopyFiles */,
@@ -106,6 +110,9 @@
 		FA886E0F1A76787900D3F820 /* recurrentLayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recurrentLayer.h; path = src/rnn/recurrentLayer.h; sourceTree = SOURCE_ROOT; };
 		FA886E121A769FDB00D3F820 /* sequentialDataset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sequentialDataset.cpp; path = src/rnn/sequentialDataset.cpp; sourceTree = SOURCE_ROOT; };
 		FA886E131A769FDB00D3F820 /* sequentialDataset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sequentialDataset.h; path = src/rnn/sequentialDataset.h; sourceTree = SOURCE_ROOT; };
+		FA9BBAF51A7E2606008F5D77 /* random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = random.cpp; sourceTree = "<group>"; };
+		FA9BBAF61A7E2606008F5D77 /* random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		FA9BBAF91A7E2CA8008F5D77 /* random.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = random.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -192,6 +199,9 @@
 				FA0D0FE41A6C283600F395E5 /* vector.cpp */,
 				FA0D0FE51A6C283600F395E5 /* vector.h */,
 				FA0D10111A6D227600F395E5 /* range.h */,
+				FA9BBAF51A7E2606008F5D77 /* random.cpp */,
+				FA9BBAF61A7E2606008F5D77 /* random.h */,
+				FA9BBAF91A7E2CA8008F5D77 /* random.cl */,
 			);
 			name = core;
 			path = src/core;
@@ -244,6 +254,7 @@
 				FA0D0FD61A6C282800F395E5 /* layer.h in Headers */,
 				FA0D0FDB1A6C282800F395E5 /* trainer.h in Headers */,
 				FA0D0FD21A6C282800F395E5 /* classificationEvaluator.h in Headers */,
+				FA9BBAF81A7E2606008F5D77 /* random.h in Headers */,
 				FA0D0FEC1A6C283600F395E5 /* valueType.h in Headers */,
 				FA886E151A769FDB00D3F820 /* sequentialDataset.h in Headers */,
 				FA0D0FF61A6C28A000F395E5 /* gradientDescent.h in Headers */,
@@ -338,6 +349,7 @@
 				FA0D0FD51A6C282800F395E5 /* layer.cpp in Sources */,
 				FA0D0FD31A6C282800F395E5 /* errorCriterion.cpp in Sources */,
 				FA886E0D1A766C6300D3F820 /* transferFunction.cpp in Sources */,
+				FA9BBAF71A7E2606008F5D77 /* random.cpp in Sources */,
 				FA886E141A769FDB00D3F820 /* sequentialDataset.cpp in Sources */,
 				FA0D0FD71A6C282800F395E5 /* network.cpp in Sources */,
 				FA886E101A76787900D3F820 /* recurrentLayer.cpp in Sources */,

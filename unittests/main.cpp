@@ -3,6 +3,7 @@
 #include <fstream>
 #include "core/opencl.h"
 #include "core/vector.h"
+#include "core/random.h"
 #include "nn/network.h"
 #include "nn/trainer.h"
 #include "nn/errorCriterion.h"
@@ -202,6 +203,29 @@ void testBooleanOperations(Device &device) {
     z.write({ uint8_t(0), uint8_t(1), uint8_t(1), uint8_t(0), uint8_t(0), uint8_t(1), uint8_t(1), uint8_t(1), uint8_t(0), uint8_t(0), uint8_t(1), uint8_t(0) });
     partialTrueCount(result, z);
     assertEquals(result, { uint32_t(2), uint32_t(1), uint32_t(2), uint32_t(1) });
+}
+
+void testRandom(Device &device) {
+    // Test the uniform float generation to make sure it produces a
+    // uniform sequence of numbers ranging from 0 to 1.
+    RandomGenerator gen(device, 100);
+    Vector rnd(device, 100);
+    Vector sum(device, 100);
+    std::vector<size_t> iterations = {10,20,100};
+    
+    for (auto count: iterations) {
+        sum.zeros();
+        for (size_t i = 0; i < count; ++i) {
+            gen.uniformFloatDistribution(rnd);
+            add(sum, rnd);
+        }
+        Vector result(device, 1);
+        partialSum(result, sum);
+        std::vector<float> randomSum;
+        result.copy(randomSum);
+        float avg = randomSum[0]/float(count*rnd.size());
+        assert(avg >= 0.48 && avg <= 0.52);
+    }
 }
 
 void testTransferFunctions(Device &device) {
@@ -481,6 +505,7 @@ int main(int argc, const char * argv[]) {
     testSum(device);
     testBLAS(device);
     testBooleanOperations(device);
+    testRandom(device);
     testTransferFunctions(device);
     testLayers(device);
     testLogicGates(device);
