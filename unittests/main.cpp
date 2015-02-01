@@ -5,6 +5,7 @@
 #include "core/vector.h"
 #include "core/random.h"
 #include "nn/network.h"
+#include "nn/dropout.h"
 #include "nn/trainer.h"
 #include "nn/errorCriterion.h"
 #include "nn/classificationEvaluator.h"
@@ -430,9 +431,12 @@ void testMNIST(Device &device) {
     const size_t parallelisationFactor = 50;
     
     Network net(device);
-    size_t imageSize = trainingSet.imageWidth()*trainingSet.imageHeight();
-    net.add(std::unique_ptr<Layer>(new Layer(device, 400, imageSize, TransferFunction::RectifiedLinearUnit, parallelisationFactor)));
-    net.add(std::unique_ptr<Layer>(new Layer(device, 10, 400, TransferFunction::Sigmoid, parallelisationFactor)));
+    const size_t imageSize = trainingSet.imageWidth()*trainingSet.imageHeight();
+    const size_t hiddenUnits = 400;
+    net.add(std::unique_ptr<DropoutLayer>(new DropoutLayer(device, imageSize, 0.9, parallelisationFactor)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, hiddenUnits, imageSize, TransferFunction::RectifiedLinearUnit, parallelisationFactor)));
+    net.add(std::unique_ptr<DropoutLayer>(new DropoutLayer(device, hiddenUnits, 0.9, parallelisationFactor)));
+    net.add(std::unique_ptr<Layer>(new Layer(device, 10, hiddenUnits, TransferFunction::Sigmoid, parallelisationFactor)));
     uint32_t seed = 12;
     std::cout << "Random initialization using seed '" << seed << "'\n";
     net.init(seed);
