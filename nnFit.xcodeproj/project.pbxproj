@@ -117,6 +117,7 @@
 		FA9BBAF91A7E2CA8008F5D77 /* random.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = random.cl; sourceTree = "<group>"; };
 		FA9BBAFC1A7E3BE1008F5D77 /* dropout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dropout.cpp; sourceTree = "<group>"; };
 		FA9BBAFD1A7E3BE1008F5D77 /* dropout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dropout.h; sourceTree = "<group>"; };
+		FA9BBB001A7E5FA2008F5D77 /* abstractLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = abstractLayer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -187,6 +188,7 @@
 				FA886E0C1A766C6300D3F820 /* transferFunction.cpp */,
 				FA9BBAFC1A7E3BE1008F5D77 /* dropout.cpp */,
 				FA9BBAFD1A7E3BE1008F5D77 /* dropout.h */,
+				FA9BBB001A7E5FA2008F5D77 /* abstractLayer.h */,
 			);
 			name = nn;
 			path = src/nn;

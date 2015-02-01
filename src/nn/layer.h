@@ -2,13 +2,14 @@
 
 #include "core/vector.h"
 #include "transferFunction.h"
+#include "abstractLayer.h"
 
 namespace nnFit {
 
 class NNContext;
 class ErrorCriterion;
     
-class Layer {
+class Layer: public AbstractLayer {
 public:
     
     Layer(Device &device, size_t neuronCount, size_t inputCount, TransferFunction transferFunction = TransferFunction::Linear, size_t parallelisationFactor = 1);
@@ -47,18 +48,20 @@ public:
         return errorOutputs;
     }
     
-    void init(uint32_t seed);
-    void dump();
-    void tune();
-    const Vector &predict(NNContext &ctx, const Vector &input);
-    const Vector &feedforward(NNContext &ctx, const Vector &input);
-    const Vector &backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown = true);
-    const Vector &backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown = true);
+    void init(uint32_t seed) override;
+    void dump() override;
+    void tune() override;
+    
+    const Vector &predict(NNContext &ctx, const Vector &input) override;
+    const Vector &feedforward(NNContext &ctx, const Vector &input) override;
+    const Vector &backpropagate(NNContext &ctx, const Vector &expectedOutput, const ErrorCriterion &criterion, bool backpropagateDown = true) override;
+    const Vector &backpropagate(NNContext &ctx, const Vector &errorInput, bool backpropagateDown = true) override;
     
     const Vector &predictLinear(NNContext &ctx, const Vector &input);
     const Vector &backpropagate(NNContext &ctx);
     void updatePreviousInput(const Vector &input);
-    void computeGradients(NNContext &ctx);
+    void accumulateGradients(NNContext &ctx) override;
+    void collectWeightsAndGradients(std::vector<std::pair<const Vector*, const Vector*>> &weightsAndGradients) override;
 private:
     Layer(const Layer&) = delete;
     Matrix weights;

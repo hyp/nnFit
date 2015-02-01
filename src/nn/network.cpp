@@ -26,11 +26,15 @@ NNContext::NNContext(Device &device) : floatKernels(device, device.getProgram("n
 Network::Network(Device &device) : dev(device), ctx(device) {
 }
 
+Network &Network::add(std::unique_ptr<AbstractLayer> layer) {
+    layers.push_back(std::move(layer));
+    return *this;
+}
+
 std::vector<std::pair<const Vector*, const Vector*>> Network::weightsAndGradients() {
     std::vector<std::pair<const Vector*, const Vector*>> result;
     for (const auto &layer: layers) {
-        result.push_back(std::make_pair(&layer->neuronWeights(), &layer->neuronWeightGradients()));
-        result.push_back(std::make_pair(&layer->neuronBiases(), &layer->neuronBiasGradients()));
+        layer->collectWeightsAndGradients(result);
     }
     return result;
 }
@@ -77,11 +81,11 @@ const Vector &Network::feedforward(const Vector &input) {
 void Network::backpropagate(const Vector &expectedOutput, const ErrorCriterion &criterion) {
     size_t i = layers.size() - 1;
     const auto *error = &layers[i]->backpropagate(ctx, expectedOutput, criterion, i != 0);
-    layers[i]->computeGradients(ctx);
+    layers[i]->accumulateGradients(ctx);
     
     for (; i != 0; ) {
         --i;
         error = &layers[i]->backpropagate(ctx, *error, i != 0);
-        layers[i]->computeGradients(ctx);
+        layers[i]->accumulateGradients(ctx);
     }
 }

@@ -50,16 +50,9 @@ public:
         return dev;
     }
     
-    Network &add(std::unique_ptr<Layer> layer) {
-        layers.push_back(std::move(layer));
-        return *this;
-    }
+    Network &add(std::unique_ptr<AbstractLayer> layer);
     
     std::vector<std::pair<const Vector*, const Vector*>> weightsAndGradients();
-    
-    Layer &lastLayer() const {
-        return *layers.back();
-    }
     
     void init(uint32_t seed);
     void init();
@@ -72,7 +65,7 @@ private:
     Network(const Network&) = delete;
     Device &dev;
     NNContext ctx;
-    std::vector<std::unique_ptr<Layer>> layers;
+    std::vector<std::unique_ptr<AbstractLayer>> layers;
 };
 
 } // namespace nnFit

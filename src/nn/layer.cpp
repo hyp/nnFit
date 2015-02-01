@@ -129,7 +129,7 @@ static const Kernel &chooseWeightGradientKernel(NNContext &ctx, size_t paralleli
     return use4wide? ctx.floatKernels.computeWeightGradients4Parallel : ctx.floatKernels.computeWeightGradientsParallel;
 }
 
-void Layer::computeGradients(NNContext &ctx) {
+void Layer::accumulateGradients(NNContext &ctx) {
     auto &queue = ctx.queue();
     // weightGradient += error * input'
     bool use4wide = weightGradients.columns() % 4 == 0;
@@ -143,4 +143,9 @@ void Layer::computeGradients(NNContext &ctx) {
     }
     assert(errorTerms.size() == biasGradients.size()*parallelisationFactor);
     queue.enqueue1Dim(ctx.floatKernels.computeBiasGradients(errorTerms, parallelisationFactor, biasGradients), biasGradients.size());
+}
+
+void Layer::collectWeightsAndGradients(std::vector<std::pair<const Vector*, const Vector*>> &weightsAndGradients) {
+    weightsAndGradients.push_back(std::make_pair(&weights, &weightGradients));
+    weightsAndGradients.push_back(std::make_pair(&biases, &biasGradients));
 }
