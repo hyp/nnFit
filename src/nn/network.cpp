@@ -6,6 +6,8 @@ using namespace nnFit;
 NNContext::Specialization::Specialization(Device &device, Program &program) {
     sigmoidPredict = Kernel(program, "sigmoidPredict");
     sigmoidFeedforward = Kernel(program, "sigmoidFeedforward");
+    tanhPredict = Kernel(program, "tanhPredict");
+    tanhFeedforward = Kernel(program, "tanhFeedforward");
     reluPredict = Kernel(program, "reluPredict");
     reluFeedforward = Kernel(program, "reluFeedforward");
     meanSquaredError = Kernel(program, "meanSquaredError");

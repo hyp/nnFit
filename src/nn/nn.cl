@@ -19,6 +19,18 @@ kernel void sigmoidFeedforward(global Scalar *x, global Scalar *derivative) {
     derivative[i] = y*((Scalar)1.0 - y);
 }
 
+kernel void tanhPredict(global Scalar *x) {
+    size_t i = get_global_id(0);
+    x[i] = tanh(x[i]);
+}
+
+kernel void tanhFeedforward(global Scalar *x, global Scalar *derivative) {
+    size_t i = get_global_id(0);
+    Scalar y = tanh(x[i]);
+    x[i] = y;
+    derivative[i] = 1 - y*y;
+}
+
 kernel void reluPredict(global Scalar *x) {
     size_t i = get_global_id(0);
     x[i] = max(x[i], (Scalar)0.0);

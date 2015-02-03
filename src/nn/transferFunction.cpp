@@ -7,10 +7,10 @@ static const Kernel &predictFunction(NNContext &ctx, TransferFunction::Kind kind
     switch (kind) {
     case TransferFunction::Sigmoid:
         return ctx.floatKernels.sigmoidPredict;
-        break;
+    case TransferFunction::Tanh:
+        return ctx.floatKernels.tanhPredict;
     case TransferFunction::RectifiedLinearUnit:
         return ctx.floatKernels.reluPredict;
-        break;
     default: break;
     }
     assert(false && "Invalid transfer function");
@@ -20,10 +20,10 @@ static const Kernel &feedforwardFunction(NNContext &ctx, TransferFunction::Kind 
     switch (kind) {
     case TransferFunction::Sigmoid:
         return ctx.floatKernels.sigmoidFeedforward;
-        break;
+    case TransferFunction::Tanh:
+        return ctx.floatKernels.tanhFeedforward;
     case TransferFunction::RectifiedLinearUnit:
         return ctx.floatKernels.reluFeedforward;
-        break;
     default: break;
     }
     assert(false && "Invalid transfer function");

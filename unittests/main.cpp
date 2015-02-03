@@ -234,6 +234,7 @@ void testTransferFunctions(Device &device) {
     auto &ctx = net.context();
     TransferFunction linear(TransferFunction::Linear);
     TransferFunction sigmoid(TransferFunction::Sigmoid);
+    TransferFunction tanh(TransferFunction::Tanh);
     TransferFunction relu(TransferFunction::RectifiedLinearUnit);
     
     Vector input(device, {-5.0f, -1.0f, 0.5f, 1.0f, 5.0f});
@@ -253,6 +254,11 @@ void testTransferFunctions(Device &device) {
     sigmoid.apply(ctx, x, dx).copy(hx);
     assert(hx[0] < 0.5f && hx[1] < 0.5f);
     assert(hx[2] > 0.5f && hx[3] > 0.5f && hx[4] > 0.5f);
+    
+    input.copy(x);
+    tanh.apply(ctx, x, dx).copy(hx);
+    assert(hx[0] < 0.0f && hx[1] < 0.0f);
+    assert(hx[2] > 0.0f && hx[3] > 0.0f && hx[4] > 0.0f);
 }
 
 void testLayers(Device &device) {

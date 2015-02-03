@@ -11,6 +11,8 @@ public:
     struct Specialization {
         Kernel sigmoidPredict;
         Kernel sigmoidFeedforward;
+        Kernel tanhPredict;
+        Kernel tanhFeedforward;
         Kernel reluPredict;
         Kernel reluFeedforward;
         Kernel meanSquaredError;

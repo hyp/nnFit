@@ -11,6 +11,7 @@ public:
     enum Kind {
         Linear,
         Sigmoid,
+        Tanh,
         RectifiedLinearUnit
     };
     
