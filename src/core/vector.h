@@ -123,6 +123,9 @@ public:
         read(dest.data(), dest.size());
     }
     
+    // Shares the data in this vector with another vector.
+    void shareWith(Vector &dest) const;
+    
     void resize(size_t size);
 private:
     void write(const void *data, size_t size) const;
@@ -159,6 +162,8 @@ public:
     void identity();
 
     void resize(size_t rows, size_t columns);
+    
+    void shareWith(Matrix &dest) const;
 private:
     Matrix(const Matrix &) = delete;
     size_t sizes[2];

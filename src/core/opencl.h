@@ -232,6 +232,9 @@ public:
     inline cl_mem id() const {
         return buffer;
     }
+    
+    // Shares the data with another storage object.
+    void shareWith(Storage &other) const;
 private:
     Storage(const Storage &) = delete;
     cl_mem buffer;

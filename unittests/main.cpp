@@ -92,6 +92,16 @@ void testVectors(Device &device) {
     dests.zeros();
     x.copy(dests.slice(1, 5));
     assertEquals(dests, {0.0f,1.0f,2.0f,3.0f, 4.0f,0.0f,0.0f,0.0f});
+    
+    // Vector sharing
+    Vector xs(device);
+    x.shareWith(xs);
+    assert(x.size() == xs.size());
+    assertEquals(x, {1.0f,2.0f,3.0f,4.0f});
+    x.fill(11.0f);
+    assertEquals(xs, {11.0f,11.0f,11.0f,11.0f});
+    xs.write({0.0f,2.0f,7.0f,13.0f});
+    assertEquals(x, {0.0f,2.0f,7.0f,13.0f});
 }
 
 void testSum(Device &device) {

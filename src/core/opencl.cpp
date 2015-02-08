@@ -377,6 +377,13 @@ Storage &Storage::operator = (Storage &&other) {
     return *this;
 }
 
+void Storage::shareWith(Storage &other) const {
+    if (other.buffer)
+        clReleaseMemObject(other.buffer);
+    clRetainMemObject(buffer);
+    other.buffer = buffer;
+}
+
 namespace nnFit {
     
 KernelInvocation &operator <<(KernelInvocation &kernel, float x) {

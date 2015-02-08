@@ -113,6 +113,12 @@ void VectorSlice::copy(VectorSlice &dest) const {
     dev.queue().copy(storage, dest.storage, size()*elementSize, off*elementSize, dest.off*elementSize);
 }
 
+void Vector::shareWith(Vector &dest) const {
+    assert(vtype == dest.vtype);
+    storage.shareWith(dest.storage);
+    dest.length = length;
+}
+
 void Vector::resize(size_t size) {
     storage = std::move(Storage(dev, size*vtype.size()));
     length = size;
@@ -153,6 +159,12 @@ void Matrix::resize(size_t rows, size_t columns) {
     Vector::resize(rows*columns);
     sizes[0] = rows;
     sizes[1] = columns;
+}
+
+void Matrix::shareWith(Matrix &dest) const {
+    Vector::shareWith(dest);
+    dest.sizes[0] = sizes[0];
+    dest.sizes[1] = sizes[1];
 }
 
 static void exec(Kernel &kernel, const Vector &dest, const Vector &x, const Vector &y) {
